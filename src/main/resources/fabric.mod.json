@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "novaclient",
+  "version": "${version}",
+  "name": "NovaClient",
+  "description": "Легальный client-side Fabric клиент с улучшениями QoL",
+  "authors": ["NovaClient Team"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.novaclient.NovaClient"
+    ]
+  },
+  "mixins": [
+    "novaclient.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.2",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
