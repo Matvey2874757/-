@@ -44,10 +44,8 @@ public final class KeystrokesModule extends HudTextModule {
 
         int panelWidth = key * 4 + gap * 3;
         int cpsY = mouseY + key + gap;
-        context.fill(panelX, cpsY, panelX + panelWidth, cpsY + 14, 0xA01A2438);
-        context.fill(panelX, cpsY, panelX + panelWidth, cpsY + 1, 0xFF63B3FF);
-        String cps = "CPS: " + clicks.size();
-        context.drawCenteredTextWithShadow(ClientRefs.MC.textRenderer, cps, panelX + panelWidth / 2, cpsY + 3, 0xFFE5F2FF);
+        drawKey(context, panelX, cpsY, panelWidth / 2 - 2, 16, "CPS", false);
+        drawKey(context, panelX + panelWidth / 2 + 2, cpsY, panelWidth / 2 - 2, 16, String.valueOf(clicks.size()), true);
     }
 
     private void drawKey(DrawContext context, int x, int y, int w, int h, String label, boolean pressed) {
