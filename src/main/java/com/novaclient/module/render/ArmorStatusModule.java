@@ -1,10 +1,13 @@
 package com.novaclient.module.render;
 
+import com.novaclient.module.BooleanSetting;
 import com.novaclient.module.hud.HudTextModule;
 import com.novaclient.util.ClientRefs;
 import net.minecraft.client.gui.DrawContext;
 
 public final class ArmorStatusModule extends HudTextModule {
+    public final BooleanSetting shortNames = addSetting(new BooleanSetting("Short Names", true));
+
     public ArmorStatusModule() {
         super("Armor Status", "Износ брони в процентах", 8, 78);
     }
@@ -18,7 +21,8 @@ public final class ArmorStatusModule extends HudTextModule {
             int max = stack.getMaxDamage();
             int left = max - stack.getDamage();
             int pct = (int) ((left * 100.0) / max);
-            drawLine(context, stack.getName().getString() + ": " + pct + "%", line++, 0xFFFFFFFF);
+            String name = shortNames.get() ? stack.getItem().toString() : stack.getName().getString();
+            drawLine(context, name + ": " + pct + "%", line++, 0xFFFFFFFF);
         }
     }
 }

@@ -55,7 +55,31 @@ public final class ModuleManager {
         return modules.stream().filter(m -> m.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
+    public List<Module> getByCategory(Category category) {
+        return modules.stream().filter(m -> m.getCategory() == category).toList();
+    }
+
+    public List<Module> getEnabledModules() {
+        return modules.stream().filter(Module::isEnabled).toList();
+    }
+
     public void tickModules() {
-        modules.stream().filter(Module::isEnabled).forEach(Module::tick);
+        getEnabledModules().forEach(Module::tick);
+    }
+
+    public void enableAll() {
+        modules.forEach(Module::enable);
+    }
+
+    public void disableAll() {
+        modules.forEach(Module::disable);
+    }
+
+    public void resetAllSettings() {
+        modules.forEach(Module::resetSettings);
+    }
+
+    public void toggleCategory(Category category, boolean enabled) {
+        modules.stream().filter(m -> m.getCategory() == category).forEach(m -> m.setEnabled(enabled));
     }
 }

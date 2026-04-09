@@ -5,5 +5,15 @@ public enum Category {
     HUD,
     MOVEMENT,
     COMBAT,
-    PERFORMANCE
+    PERFORMANCE;
+
+    public String displayName() {
+        return switch (this) {
+            case RENDER -> "Render";
+            case HUD -> "HUD";
+            case MOVEMENT -> "Movement";
+            case COMBAT -> "Combat";
+            case PERFORMANCE -> "Performance";
+        };
+    }
 }

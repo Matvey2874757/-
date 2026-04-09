@@ -18,6 +18,7 @@ public final class NovaClient implements ClientModInitializer {
     public static final ModuleManager MODULE_MANAGER = new ModuleManager();
     public static ConfigManager CONFIG;
     public static KeyBinding OPEN_MODULES;
+    public static KeyBinding PANIC_DISABLE_ALL;
 
     @Override
     public void onInitializeClient() {
@@ -31,11 +32,21 @@ public final class NovaClient implements ClientModInitializer {
                 GLFW.GLFW_KEY_RIGHT_SHIFT,
                 "category.novaclient"
         ));
+        PANIC_DISABLE_ALL = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.novaclient.panic",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_DELETE,
+                "category.novaclient"
+        ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MODULE_MANAGER.tickModules();
             while (OPEN_MODULES.wasPressed()) {
                 client.setScreen(new ModuleScreen(client.currentScreen));
+            }
+            while (PANIC_DISABLE_ALL.wasPressed()) {
+                MODULE_MANAGER.disableAll();
+                CONFIG.save(MODULE_MANAGER);
             }
         });
 

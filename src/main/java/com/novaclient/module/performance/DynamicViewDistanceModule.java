@@ -13,7 +13,10 @@ public final class DynamicViewDistanceModule extends Module {
     @Override
     public void tick() {
         if (ClientRefs.MC.options != null) {
-            ClientRefs.MC.options.getViewDistance().setValue(distance.get().intValue());
+            int target = distance.get().intValue();
+            if (ClientRefs.MC.options.getViewDistance().getValue() != target) {
+                ClientRefs.MC.options.getViewDistance().setValue(target);
+            }
         }
     }
 }

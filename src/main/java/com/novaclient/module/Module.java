@@ -37,6 +37,14 @@ public abstract class Module {
         setEnabled(!enabled);
     }
 
+    public void enable() {
+        setEnabled(true);
+    }
+
+    public void disable() {
+        setEnabled(false);
+    }
+
     public void setEnabled(boolean enabled) {
         if (this.enabled == enabled) {
             return;
@@ -64,5 +72,9 @@ public abstract class Module {
 
     public List<Setting<?>> getSettings() {
         return Collections.unmodifiableList(settings);
+    }
+
+    public void resetSettings() {
+        settings.forEach(Setting::reset);
     }
 }
