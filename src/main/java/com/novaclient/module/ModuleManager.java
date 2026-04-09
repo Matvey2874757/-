@@ -17,6 +17,7 @@ public final class ModuleManager {
     public void registerDefaults() {
         modules.clear();
         modules.add(new FullbrightModule());
+        modules.add(new AspectRatioModule());
         modules.add(new CustomCrosshairModule());
         modules.add(new HitColorModule());
         modules.add(new ItemPhysicsModule());
@@ -33,11 +34,15 @@ public final class ModuleManager {
         modules.add(new TargetHudModule());
         modules.add(new CustomChatModule());
         modules.add(new ScreenshotManagerModule());
+        modules.add(new WatermarkModule());
+        modules.add(new ClockHudModule());
+        modules.add(new DirectionCompassModule());
 
         modules.add(new SprintModule());
         modules.add(new InventoryMoveModule());
         modules.add(new NoSlowdownModule());
         modules.add(new BetterSneakModule());
+        modules.add(new AutoJumpModule());
 
         modules.add(new AimAssistModule());
         modules.add(new HitDelayTimerModule());
@@ -45,6 +50,7 @@ public final class ModuleManager {
         modules.add(new EntityCullingModule());
         modules.add(new ParticleLimitModule());
         modules.add(new DynamicViewDistanceModule());
+        modules.add(new MemoryUsageModule());
     }
 
     public List<Module> getModules() {
