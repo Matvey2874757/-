@@ -14,9 +14,14 @@ import java.util.List;
 import java.util.Map;
 
 public final class ModuleScreen extends Screen {
+    private static final int TAB_HEIGHT = 24;
+    private static final int TAB_GAP = 8;
+
     private final Screen parent;
     private final Map<Category, List<Module>> grouped = new EnumMap<>(Category.class);
-    private float fade;
+    private final List<TabBox> tabs = new ArrayList<>();
+
+    private Category activeCategory = Category.RENDER;
 
     public ModuleScreen(Screen parent) {
         super(Text.literal("Модули NovaClient"));
@@ -32,32 +37,24 @@ public final class ModuleScreen extends Screen {
         for (Module module : NovaClient.MODULE_MANAGER.getModules()) {
             grouped.get(module.getCategory()).add(module);
         }
+
+        tabs.clear();
+        int tabWidth = Math.max(94, (width - 40 - TAB_GAP * (Category.values().length - 1)) / Category.values().length);
+        int x = 20;
+        for (Category category : Category.values()) {
+            tabs.add(new TabBox(category, x, 44, tabWidth, TAB_HEIGHT));
+            x += tabWidth + TAB_GAP;
+        }
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        fade = Math.min(1f, fade + delta * 0.06f);
-
         renderBackground(context, mouseX, mouseY);
         context.drawCenteredTextWithShadow(textRenderer, title, width / 2, 14, 0xFFFFFFFF);
-        context.drawCenteredTextWithShadow(textRenderer, "Клик по карточке включает или выключает модуль", width / 2, 28, 0xBBD3EEFF);
+        context.drawCenteredTextWithShadow(textRenderer, "Вкладки: открой нужную категорию и кликай по модулю для ON/OFF", width / 2, 27, 0xB9D3EEFF);
 
-        int columns = Math.max(1, Math.min(3, width / 330));
-        int gap = 12;
-        int panelWidth = (width - 40 - gap * (columns - 1)) / columns;
-        int startX = 20;
-        int startY = 48;
-
-        int idx = 0;
-        for (Category category : Category.values()) {
-            int col = idx % columns;
-            int row = idx / columns;
-            int x = startX + col * (panelWidth + gap);
-            int y = startY + row * 168;
-            renderCategoryPanel(context, category, x, y, panelWidth, 156, mouseX, mouseY);
-            idx++;
-        }
-
+        renderTabs(context, mouseX, mouseY);
+        renderActiveModules(context, mouseX, mouseY);
         drawBackButton(context, mouseX, mouseY);
     }
 
@@ -71,46 +68,74 @@ public final class ModuleScreen extends Screen {
         context.fill(width / 2 - 70 - nx, height - 150 - ny, width - 30 - nx, height - 40 - ny, 0x2042C18B);
     }
 
-    private void renderCategoryPanel(DrawContext context, Category category, int x, int y, int width, int height, int mouseX, int mouseY) {
-        context.fill(x, y, x + width, y + height, 0xB2172238);
-        context.fill(x, y, x + width, y + 2, 0xFF63B3FF);
+    private void renderTabs(DrawContext context, int mouseX, int mouseY) {
+        for (TabBox tab : tabs) {
+            boolean hovered = tab.contains(mouseX, mouseY);
+            boolean active = tab.category == activeCategory;
 
-        Text catName = Text.literal(localizeCategory(category));
-        context.drawTextWithShadow(textRenderer, catName, x + 8, y + 8, 0xFFF0F7FF);
+            int bg = active ? 0xE0324A73 : hovered ? 0xC0293C5C : 0x90212D45;
+            int line = active ? 0xFF8BD1FF : 0xFF5E89C4;
+            context.fill(tab.x, tab.y, tab.x + tab.width, tab.y + tab.height, bg);
+            context.fill(tab.x, tab.y, tab.x + tab.width, tab.y + 2, line);
 
-        List<Module> modules = grouped.get(category);
-        int rowY = y + 26;
+            int textColor = active ? 0xFFFFFFFF : hovered ? 0xFFF0F7FF : 0xFFD6E3FF;
+            context.drawCenteredTextWithShadow(textRenderer, localizeCategory(tab.category), tab.x + tab.width / 2, tab.y + 8, textColor);
+        }
+    }
 
+    private void renderActiveModules(DrawContext context, int mouseX, int mouseY) {
+        List<Module> modules = grouped.getOrDefault(activeCategory, List.of());
+        int panelX = 20;
+        int panelY = 78;
+        int panelW = width - 40;
+        int panelH = height - 116;
+
+        context.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xA2162238);
+        context.fill(panelX, panelY, panelX + panelW, panelY + 2, 0xFF63B3FF);
+
+        int columns = panelW > 780 ? 3 : 2;
+        int gap = 10;
+        int cardW = (panelW - 20 - gap * (columns - 1)) / columns;
+
+        int idx = 0;
         for (Module module : modules) {
-            int rowHeight = 18;
-            boolean hovered = mouseX >= x + 6 && mouseX <= x + width - 6 && mouseY >= rowY && mouseY <= rowY + rowHeight;
-            boolean enabled = module.isEnabled();
+            int col = idx % columns;
+            int row = idx / columns;
+            int x = panelX + 10 + col * (cardW + gap);
+            int y = panelY + 10 + row * 36;
+            int h = 30;
 
-            int bg = enabled ? 0xAA214D3C : 0x88314157;
-            if (hovered) {
-                bg = enabled ? 0xCC2A654E : 0xB04D5E7E;
-            }
-
-            context.fill(x + 6, rowY, x + width - 6, rowY + rowHeight, bg);
-
-            int textColor = enabled ? 0xFFDAFFE7 : 0xFFE6EDFF;
-            context.drawTextWithShadow(textRenderer, module.getName(), x + 12, rowY + 5, textColor);
-
-            Text state = Text.literal(enabled ? "ON" : "OFF");
-            int sw = textRenderer.getWidth(state);
-            int sx = x + width - 12 - sw;
-            int stateColor = enabled ? 0xFF80F4B0 : 0xFFFF9AA8;
-            context.drawTextWithShadow(textRenderer, state, sx, rowY + 5, stateColor);
-
-            rowY += 20;
-            if (rowY > y + height - 20) {
+            if (y + h > panelY + panelH - 8) {
                 break;
             }
+
+            boolean hovered = mouseX >= x && mouseX <= x + cardW && mouseY >= y && mouseY <= y + h;
+            boolean enabled = module.isEnabled();
+
+            int bg = enabled ? 0xB8255641 : 0x90314256;
+            if (hovered) {
+                bg = enabled ? 0xD0316D54 : 0xB14B5D7D;
+            }
+
+            context.fill(x, y, x + cardW, y + h, bg);
+            context.fill(x, y, x + 3, y + h, enabled ? 0xFF79F0AE : 0xFFFF95A4);
+
+            context.drawTextWithShadow(textRenderer, module.getName(), x + 8, y + 6, enabled ? 0xFFE8FFEF : 0xFFE9EEFF);
+            String status = enabled ? "ON" : "OFF";
+            context.drawTextWithShadow(textRenderer, status, x + cardW - 8 - textRenderer.getWidth(status), y + 6, enabled ? 0xFF8EFFB7 : 0xFFFFA0AF);
+
+            String desc = module.getDescription();
+            if (desc.length() > 38) {
+                desc = desc.substring(0, 35) + "...";
+            }
+            context.drawText(textRenderer, desc, x + 8, y + 18, 0xB7CCE7FF, false);
+
+            idx++;
         }
     }
 
     private void drawBackButton(DrawContext context, int mouseX, int mouseY) {
-        int bw = 120;
+        int bw = 124;
         int bh = 24;
         int bx = width / 2 - bw / 2;
         int by = height - 30;
@@ -127,7 +152,14 @@ public final class ModuleScreen extends Screen {
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
-        int bw = 120;
+        for (TabBox tab : tabs) {
+            if (tab.contains(mouseX, mouseY)) {
+                activeCategory = tab.category;
+                return true;
+            }
+        }
+
+        int bw = 124;
         int bh = 24;
         int bx = width / 2 - bw / 2;
         int by = height - 30;
@@ -136,32 +168,32 @@ public final class ModuleScreen extends Screen {
             return true;
         }
 
-        int columns = Math.max(1, Math.min(3, width / 330));
-        int gap = 12;
-        int panelWidth = (width - 40 - gap * (columns - 1)) / columns;
-        int startX = 20;
-        int startY = 48;
+        List<Module> modules = grouped.getOrDefault(activeCategory, List.of());
+        int panelX = 20;
+        int panelY = 78;
+        int panelW = width - 40;
+        int panelH = height - 116;
+        int columns = panelW > 780 ? 3 : 2;
+        int gap = 10;
+        int cardW = (panelW - 20 - gap * (columns - 1)) / columns;
 
         int idx = 0;
-        for (Category category : Category.values()) {
+        for (Module module : modules) {
             int col = idx % columns;
             int row = idx / columns;
-            int x = startX + col * (panelWidth + gap);
-            int y = startY + row * 168;
-
-            int rowY = y + 26;
-            for (Module module : grouped.get(category)) {
-                int rowHeight = 18;
-                if (mouseX >= x + 6 && mouseX <= x + panelWidth - 6 && mouseY >= rowY && mouseY <= rowY + rowHeight) {
-                    module.toggle();
-                    NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-                    return true;
-                }
-                rowY += 20;
-                if (rowY > y + 156 - 20) {
-                    break;
-                }
+            int x = panelX + 10 + col * (cardW + gap);
+            int y = panelY + 10 + row * 36;
+            int h = 30;
+            if (y + h > panelY + panelH - 8) {
+                break;
             }
+
+            if (mouseX >= x && mouseX <= x + cardW && mouseY >= y && mouseY <= y + h) {
+                module.toggle();
+                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                return true;
+            }
+
             idx++;
         }
 
@@ -185,5 +217,25 @@ public final class ModuleScreen extends Screen {
             case COMBAT -> "Combat Visual";
             case PERFORMANCE -> "Performance";
         };
+    }
+
+    private static final class TabBox {
+        private final Category category;
+        private final int x;
+        private final int y;
+        private final int width;
+        private final int height;
+
+        private TabBox(Category category, int x, int y, int width, int height) {
+            this.category = category;
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        private boolean contains(double mx, double my) {
+            return mx >= x && mx <= x + width && my >= y && my <= y + height;
+        }
     }
 }
