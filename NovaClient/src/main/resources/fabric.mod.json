@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "novaclient",
+  "version": "${version}",
+  "name": "NovaClient",
+  "description": "A legitimate utility client for Minecraft 1.21.1 with custom menu and modules",
+  "authors": [
+    "NovaClient Dev Team"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/novaclient/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.novaclient.NovaClient"
+    ]
+  },
+  "mixins": [
+    "novaclient.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.2",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
