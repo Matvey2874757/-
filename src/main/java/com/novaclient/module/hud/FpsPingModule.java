@@ -18,6 +18,13 @@ public final class FpsPingModule extends HudTextModule {
         if (ClientRefs.MC.getNetworkHandler() != null && ClientRefs.MC.player != null && ClientRefs.MC.getNetworkHandler().getPlayerListEntry(ClientRefs.MC.player.getUuid()) != null) {
             ping = ClientRefs.MC.getNetworkHandler().getPlayerListEntry(ClientRefs.MC.player.getUuid()).getLatency();
         }
-        drawLine(context, compact.get() ? (fps + " FPS / " + ping + "ms") : ("FPS: " + fps + " | Ping: " + ping), 0, 0xFFFFFFFF);
+        
+        String text = compact.get() ? (fps + " FPS / " + ping + "ms") : ("FPS: " + fps + " | Ping: " + ping);
+        int lineHeight = getTextHeight();
+        int totalHeight = lineHeight;
+        int maxWidth = getTextWidth(text);
+        
+        renderBackground(context, maxWidth, totalHeight);
+        drawLine(context, text, 0, 0xFFFFFFFF);
     }
 }

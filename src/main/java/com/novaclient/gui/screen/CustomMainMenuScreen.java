@@ -126,7 +126,7 @@ public final class CustomMainMenuScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         anim = Math.min(1f, anim + delta * 0.05f);
         
-        // Deep space background gradient
+        // Deep space background gradient - fully opaque (alpha 255)
         int bg1 = ColorHelper.Argb.getArgb(255, 5, 8, 20);
         int bg2 = ColorHelper.Argb.getArgb(255, 15, 20, 45);
         int bg3 = ColorHelper.Argb.getArgb(255, 25, 30, 60);
@@ -165,11 +165,11 @@ public final class CustomMainMenuScreen extends Screen {
             context.fill((int)comet.x, (int)comet.y, (int)(comet.x + comet.size * 4), (int)(comet.y + comet.size * 2), headColor);
         }
         
-        // Subtle nebula effect
+        // Subtle nebula effect - reduced opacity to prevent blur overlay
         float nx = (mouseX - width / 2f) / width * 20;
         float ny = (mouseY - height / 2f) / height * 20;
         context.fillGradient(-60 + (int)nx, -60 + (int)ny, width / 2 + 60 + (int)nx, height / 2 + 60 + (int)ny,
-                ColorHelper.Argb.getArgb(40, 50, 30, 100), ColorHelper.Argb.getArgb(10, 0, 0, 0));
+                ColorHelper.Argb.getArgb(25, 50, 30, 100), ColorHelper.Argb.getArgb(5, 0, 0, 0));
 
         // Title text with glow effect
         int titleAlpha = (int)(anim * 255);
@@ -200,32 +200,32 @@ public final class CustomMainMenuScreen extends Screen {
             }
             
             // Button background with gradient
-            int baseAlpha = 180;
-            int hoverBoost = (int)(btn.hoverAlpha * 40);
-            int borderAlpha = (int)(100 + btn.hoverAlpha * 155);
+            int baseAlpha = 160;
+            int hoverBoost = (int)(btn.hoverAlpha * 30);
+            int borderAlpha = (int)(80 + btn.hoverAlpha * 120);
             
-            // Outer glow
-            int glowSize = (int)(4 + btn.hoverAlpha * 8);
+            // Outer glow - reduced intensity
+            int glowSize = (int)(3 + btn.hoverAlpha * 5);
             for (int g = glowSize; g > 0; g--) {
-                int glowAlpha = (int)(30 * btn.hoverAlpha * (1f - (float)g / glowSize));
+                int glowAlpha = (int)(20 * btn.hoverAlpha * (1f - (float)g / glowSize));
                 int glowColor = ColorHelper.Argb.getArgb(glowAlpha, 100, 180, 255);
                 context.fill(btn.x - g, btn.y - g, btn.x + btn.width + g, btn.y + btn.height + g, glowColor);
             }
             
-            // Main button gradient
+            // Main button gradient - more transparent
             int topColor = ColorHelper.Argb.getArgb(baseAlpha + hoverBoost, 30 + (int)(btn.hoverAlpha * 30), 40 + (int)(btn.hoverAlpha * 40), 60 + (int)(btn.hoverAlpha * 60));
             int bottomColor = ColorHelper.Argb.getArgb(baseAlpha + hoverBoost, 20 + (int)(btn.hoverAlpha * 20), 30 + (int)(btn.hoverAlpha * 30), 50 + (int)(btn.hoverAlpha * 50));
             context.fillGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height, topColor, bottomColor);
             
-            // Border
+            // Border - less intense
             int borderColor = ColorHelper.Argb.getArgb(borderAlpha, 80 + (int)(btn.hoverAlpha * 100), 150 + (int)(btn.hoverAlpha * 105), 255);
             context.fill(btn.x - 1, btn.y - 1, btn.x + btn.width + 1, btn.y, borderColor); // Top
             context.fill(btn.x - 1, btn.y + btn.height, btn.x + btn.width + 1, btn.y + btn.height + 1, borderColor); // Bottom
             context.fill(btn.x - 1, btn.y, btn.x, btn.y + btn.height, borderColor); // Left
             context.fill(btn.x + btn.width, btn.y, btn.x + btn.width + 1, btn.y + btn.height, borderColor); // Right
             
-            // Inner highlight
-            int highlightAlpha = (int)(50 * btn.hoverAlpha);
+            // Inner highlight - reduced
+            int highlightAlpha = (int)(30 * btn.hoverAlpha);
             int highlightColor = ColorHelper.Argb.getArgb(highlightAlpha, 255, 255, 255);
             context.fill(btn.x + 2, btn.y + 2, btn.x + btn.width - 2, btn.y + 8, highlightColor);
             
@@ -255,6 +255,11 @@ public final class CustomMainMenuScreen extends Screen {
     @Override
     public boolean shouldPause() {
         return false;
+    }
+
+    @Override
+    protected void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Empty method to prevent rendering blurred world background
     }
     
     @Override

@@ -192,11 +192,13 @@ public final class ModuleScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Background gradient
-        context.fillGradient(0, 0, width, height, 0xFF0A0F1A, 0xFF121828);
+        // Background gradient - fully opaque (alpha 255)
+        int bgTop = ColorHelper.Argb.getArgb(255, 10, 15, 26);
+        int bgBottom = ColorHelper.Argb.getArgb(255, 18, 24, 40);
+        context.fillGradient(0, 0, width, height, bgTop, bgBottom);
         
-        // Sidebar background
-        context.fill(0, 0, sidebarWidth, height, ColorHelper.Argb.getArgb(220, 12, 16, 28));
+        // Sidebar background - fully opaque
+        context.fill(0, 0, sidebarWidth, height, ColorHelper.Argb.getArgb(255, 12, 16, 28));
         
         // Sidebar separator line with glow
         context.fill(sidebarWidth, 0, sidebarWidth + 3, height, ColorHelper.Argb.getArgb(180, 60, 80, 120));
@@ -242,21 +244,21 @@ public final class ModuleScreen extends Screen {
             card.animAlpha = Math.max(0f, card.animAlpha - delta * 0.15f);
         }
         
-        // Card background
-        int baseAlpha = card.module.isEnabled() ? 200 : 160;
-        int alphaBoost = (int)(card.animAlpha * 40);
+        // Card background - reduced opacity
+        int baseAlpha = card.module.isEnabled() ? 180 : 140;
+        int alphaBoost = (int)(card.animAlpha * 30);
         
-        // Glow effect for enabled modules
+        // Glow effect for enabled modules - reduced intensity
         if (card.module.isEnabled()) {
-            int glowSize = (int)(3 + card.animAlpha * 6);
+            int glowSize = (int)(2 + card.animAlpha * 4);
             for (int g = glowSize; g > 0; g--) {
-                int glowAlpha = (int)(25 * card.animAlpha * (1f - (float)g / glowSize));
+                int glowAlpha = (int)(15 * card.animAlpha * (1f - (float)g / glowSize));
                 int glowColor = ColorHelper.Argb.getArgb(glowAlpha, 50, 200, 100);
                 context.fill(card.x - g, card.y - g, card.x + card.width + g, card.y + card.height + g, glowColor);
             }
         }
         
-        // Main card gradient
+        // Main card gradient - more transparent
         int topColor = ColorHelper.Argb.getArgb(baseAlpha + alphaBoost, 
             card.module.isEnabled() ? 20 : 15, 
             card.module.isEnabled() ? 35 : 20, 
@@ -267,8 +269,8 @@ public final class ModuleScreen extends Screen {
             card.module.isEnabled() ? 40 : 25);
         context.fillGradient(card.x, card.y, card.x + card.width, card.y + card.height, topColor, bottomColor);
         
-        // Border
-        int borderColor = ColorHelper.Argb.getArgb(100 + (int)(card.animAlpha * 155), 
+        // Border - less intense
+        int borderColor = ColorHelper.Argb.getArgb(80 + (int)(card.animAlpha * 100), 
             card.module.isEnabled() ? 50 : 40, 
             card.module.isEnabled() ? 180 : 100, 
             card.module.isEnabled() ? 100 : 80);
@@ -475,5 +477,15 @@ public final class ModuleScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    @Override
+    protected void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Empty method to prevent rendering blurred world background
+    }
+
+    @Override
+    public boolean shouldPause() {
+        return false;
     }
 }
