@@ -1,42 +1,47 @@
 package com.novaclient.module.hud;
 
-import com.novaclient.module.BooleanSetting;
 import com.novaclient.util.ClientRefs;
 import net.minecraft.client.gui.DrawContext;
 
 public final class CoordinatesModule extends HudTextModule {
-    public final BooleanSetting showYaw = addSetting(new BooleanSetting("Show Yaw", true));
-
     public CoordinatesModule() {
-        super("Coordinates", "X/Y/Z и направление", 8, 48);
+        super("Coordinates", "X/Y/Z координаты и Yaw", 8, 48);
     }
 
     @Override
     public void renderHud(DrawContext context, float tickDelta) {
         if (ClientRefs.MC.player == null) return;
-        var p = ClientRefs.MC.player;
         
-        String[] lines = new String[] {
-            String.format("XYZ: %.1f %.1f %.1f", p.getX(), p.getY(), p.getZ())
-        };
+        String line1 = String.format("§eX: §f%.1f §eY: §f%.1f §eZ: §f%.1f", 
+            ClientRefs.MC.player.getX(), 
+            ClientRefs.MC.player.getY(), 
+            ClientRefs.MC.player.getZ());
         
-        if (showYaw.get()) {
-            lines = java.util.Arrays.copyOf(lines, lines.length + 1);
-            lines[lines.length - 1] = "Yaw: " + Math.round(p.getYaw());
-        }
+        float yaw = ClientRefs.MC.player.getYaw();
+        String line2 = String.format("§eYaw: §f%.1f°", yaw);
         
         int lineHeight = getTextHeight();
-        int totalHeight = lines.length * lineHeight;
-        int maxWidth = 0;
-        
-        for (String line : lines) {
-            maxWidth = Math.max(maxWidth, getTextWidth(line));
-        }
+        int totalHeight = lineHeight * 2;
+        int maxWidth = Math.max(getTextWidth(line1.replace("§", "")), getTextWidth(line2.replace("§", "")));
         
         renderBackground(context, maxWidth, totalHeight);
         
-        for (int i = 0; i < lines.length; i++) {
-            drawLine(context, lines[i], i, 0xFFFFFFFF);
-        }
+        // Рисуем с форматированием
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
+        context.drawTextWithShadow(
+            net.minecraft.client.MinecraftClient.getInstance().textRenderer,
+            line1,
+            renderX,
+            renderY,
+            0xFFFFFFFF
+        );
+        context.drawTextWithShadow(
+            net.minecraft.client.MinecraftClient.getInstance().textRenderer,
+            line2,
+            renderX,
+            renderY + lineHeight,
+            0xFFFFFFFF
+        );
     }
 }

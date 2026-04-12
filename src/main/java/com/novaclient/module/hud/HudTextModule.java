@@ -11,9 +11,10 @@ public abstract class HudTextModule extends Module {
     public final NumberSetting scale;
     public final NumberSetting backgroundColor;
     public final NumberSetting borderColor;
+    protected int renderX, renderY;
 
     protected HudTextModule(String name, String description, int x, int y) {
-        super(name, description, Category.HUD);
+        super(name, description, Category.HUD_LAYOUT);
         this.x = addSetting(new NumberSetting("X", x, 0, 2000));
         this.y = addSetting(new NumberSetting("Y", y, 0, 2000));
         this.scale = addSetting(new NumberSetting("Scale", 1.0, 0.5, 2.0));
@@ -21,15 +22,19 @@ public abstract class HudTextModule extends Module {
         this.borderColor = addSetting(new NumberSetting("Border Alpha", 220, 0, 255));
     }
 
+    protected void updateRenderPosition() {
+        this.renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        this.renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
+    }
+
     protected void drawLine(DrawContext context, String text, int line, int color) {
         if (net.minecraft.client.MinecraftClient.getInstance().textRenderer == null) return;
-        int scaledX = (int)(x.get().intValue() * scale.get());
-        int scaledY = (int)(y.get().intValue() + line * 10 * scale.get());
+        updateRenderPosition();
         context.drawTextWithShadow(
                 net.minecraft.client.MinecraftClient.getInstance().textRenderer,
                 text,
-                scaledX,
-                scaledY,
+                renderX,
+                renderY + line * 10,
                 color
         );
     }
@@ -38,40 +43,19 @@ public abstract class HudTextModule extends Module {
         int bgAlpha = backgroundColor.get().intValue();
         int borderAlpha = borderColor.get().intValue();
         
-        // Рисуем фон с закругленными углами (имитация)
-        context.fill(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (bgAlpha << 24) | 0x101010
-        );
+        updateRenderPosition();
         
-        // Рисуем границу
-        context.drawHorizontalLine(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (borderAlpha << 24) | 0x303030
-        );
-        context.drawHorizontalLine(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (borderAlpha << 24) | 0x303030
-        );
-        context.drawVerticalLine(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (borderAlpha << 24) | 0x303030
-        );
-        context.drawVerticalLine(
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (borderAlpha << 24) | 0x303030
-        );
+        // Рисуем основной фон (темный полупрозрачный)
+        context.fill(renderX - 3, renderY - 3, renderX + width + 3, renderY + height + 3, 0xAA000000);
+        
+        // Рисуем внутреннюю рамку (более светлая)
+        context.drawHorizontalLine(renderX - 3, renderX + width + 3, renderY - 3, (borderAlpha << 24) | 0x404040);
+        context.drawHorizontalLine(renderX - 3, renderX + width + 3, renderY + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawVerticalLine(renderX - 3, renderY - 3, renderY + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawVerticalLine(renderX + width + 3, renderY - 3, renderY + height + 3, (borderAlpha << 24) | 0x404040);
+        
+        // Рисуем верхний акцент (синяя линия сверху для современного вида)
+        context.drawHorizontalLine(renderX - 2, renderX + width + 2, renderY - 2, 0xFF3498DB);
     }
 
     protected int getTextWidth(String text) {

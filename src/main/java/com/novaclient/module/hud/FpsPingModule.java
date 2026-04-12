@@ -21,10 +21,23 @@ public final class FpsPingModule extends HudTextModule {
         
         String text = compact.get() ? (fps + " FPS / " + ping + "ms") : ("FPS: " + fps + " | Ping: " + ping);
         int lineHeight = getTextHeight();
-        int totalHeight = lineHeight;
-        int maxWidth = getTextWidth(text);
+        int totalHeight = compact.get() ? lineHeight : lineHeight * 2;
+        int maxWidth = compact.get() ? getTextWidth(text) : Math.max(getTextWidth("FPS: " + fps), getTextWidth("Ping: " + ping));
+        
+        // Цвет текста зависит от FPS и пинга
+        int fpsColor = fps > 60 ? 0xFF00FF00 : (fps > 30 ? 0xFFFFFF00 : 0xFFFF0000);
+        int pingColor = ping < 50 ? 0xFF00FF00 : (ping < 100 ? 0xFFFFFF00 : 0xFFFF0000);
         
         renderBackground(context, maxWidth, totalHeight);
-        drawLine(context, text, 0, 0xFFFFFFFF);
+        
+        if (compact.get()) {
+            drawLine(context, text, 0, 0xFFFFFFFF);
+        } else {
+            // Раздельное отображение с цветами
+            String fpsText = "FPS: " + fps;
+            String pingText = "Ping: " + ping;
+            drawLine(context, fpsText, 0, fpsColor);
+            drawLine(context, pingText, 1, pingColor);
+        }
     }
 }

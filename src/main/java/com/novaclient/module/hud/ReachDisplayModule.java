@@ -19,12 +19,15 @@ public final class ReachDisplayModule extends HudTextModule {
             int maxWidth = getTextWidth(text);
             
             renderBackground(context, maxWidth, totalHeight);
-            drawLine(context, text, 0, 0xFFFFFFFF);
+            drawLine(context, text, 0, 0xFFAAAAAA);
             return;
         }
         
         double reach = ClientRefs.MC.player.distanceTo(ClientRefs.MC.targetedEntity);
         maxReach = Math.max(maxReach, reach);
+        
+        // Цвет зависит от дистанции
+        int reachColor = reach > 3.5 ? 0xFFFF0000 : (reach > 3.0 ? 0xFFFFFF00 : 0xFF00FF00);
         
         String[] lines = new String[] {
             String.format("Reach: %.2f", reach),
@@ -40,7 +43,18 @@ public final class ReachDisplayModule extends HudTextModule {
         }
         
         renderBackground(context, maxWidth, totalHeight);
-        drawLine(context, lines[0], 0, 0xFFFFFFFF);
+        drawLine(context, lines[0], 0, reachColor);
         drawLine(context, lines[1], 1, 0xFFBBBBBB);
+    }
+
+    @Override
+    public void tick() {
+        if (ClientRefs.MC.targetedEntity != null && ClientRefs.MC.player != null) {
+            double reach = ClientRefs.MC.player.distanceTo(ClientRefs.MC.targetedEntity);
+            maxReach = Math.max(maxReach, reach);
+        } else {
+            // Сбрасываем maxReach если цели нет
+            maxReach = 0;
+        }
     }
 }

@@ -1,7 +1,5 @@
 package com.novaclient.module.hud;
 
-import com.novaclient.module.Category;
-import com.novaclient.module.Module;
 import com.novaclient.module.BooleanSetting;
 import com.novaclient.util.ClientRefs;
 import net.fabricmc.loader.api.FabricLoader;
@@ -13,13 +11,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public final class ScreenshotManagerModule extends Module {
+public final class ScreenshotManagerModule extends HudTextModule {
     public final BooleanSetting showHud = addSetting(new BooleanSetting("Show HUD", true));
     private long lastRefreshAt;
     private int screenshotsCount;
 
     public ScreenshotManagerModule() {
-        super("Screenshot Manager", "Просмотр скриншотов внутри клиента", Category.HUD);
+        super("Screenshot Manager", "Просмотр скриншотов внутри клиента", 8, 188);
     }
 
     @Override
@@ -38,7 +36,24 @@ public final class ScreenshotManagerModule extends Module {
     @Override
     public void renderHud(DrawContext context, float tickDelta) {
         if (!showHud.get() || ClientRefs.MC.textRenderer == null) return;
-        context.drawTextWithShadow(ClientRefs.MC.textRenderer, "Screenshots: " + screenshotsCount, 8, 228, 0xFFE5E5E5);
+        
+        String text = "Screenshots: " + screenshotsCount;
+        int width = getTextWidth(text);
+        int height = 10;
+        
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
+        
+        renderBackground(context, width, height);
+        
+        // Текст
+        context.drawTextWithShadow(
+            ClientRefs.MC.textRenderer,
+            text,
+            renderX,
+            renderY,
+            0xFFE5E5E5
+        );
     }
 
     private int countScreenshots() {
