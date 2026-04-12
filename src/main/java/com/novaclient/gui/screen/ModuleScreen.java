@@ -10,17 +10,51 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.ColorHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ModuleScreen extends Screen {
     private final Screen parent;
-    private boolean enabledOnly;
-    private Category filter;
+    private Category selectedCategory;
+    private int scrollOffset = 0;
+    private final int sidebarWidth = 140;
+    private boolean showEnabledOnly = false;
+    private final List<ModuleCard> moduleCards = new ArrayList<>();
+    private int maxContentHeight = 0;
+
+    private static class ModuleCard {
+        Module module;
+        int x, y, width, height;
+        boolean expanded = false;
+        float animAlpha = 0f;
+        
+        ModuleCard(Module module, int x, int y, int width, int height) {
+            this.module = module;
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+        
+        boolean isHovered(int mouseX, int mouseY) {
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        }
+        
+        int getTotalHeight() {
+            if (!expanded || module.getSettings().isEmpty()) {
+                return height;
+            }
+            int settingsHeight = module.getSettings().size() * 24;
+            return height + settingsHeight + 8;
+        }
+    }
 
     public ModuleScreen(Screen parent) {
         super(Text.literal("Модули NovaClient"));
         this.parent = parent;
+        this.selectedCategory = null; // null means all categories
     }
 
     @Override
@@ -30,141 +64,416 @@ public final class ModuleScreen extends Screen {
 
     private void rebuild() {
         clearChildren();
+        moduleCards.clear();
 
-        addDrawableChild(ButtonWidget.builder(enabledLabel(), b -> {
-            enabledOnly = !enabledOnly;
-            rebuild();
-        }).dimensions(12, 12, 120, 20).build());
-        addDrawableChild(ButtonWidget.builder(categoryLabel(), b -> {
-            filter = nextCategory(filter);
-            rebuild();
-        }).dimensions(136, 12, 170, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Вкл. все"), b -> {
-            NovaClient.MODULE_MANAGER.enableAll();
-            NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-            rebuild();
-        }).dimensions(310, 12, 90, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Выкл. все"), b -> {
-            NovaClient.MODULE_MANAGER.disableAll();
-            NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-            rebuild();
-        }).dimensions(404, 12, 90, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Сброс"), b -> {
-            NovaClient.MODULE_MANAGER.resetAllSettings();
-            NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-            rebuild();
-        }).dimensions(498, 12, 80, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Кат. ON"), b -> {
-            if (filter != null) {
-                NovaClient.MODULE_MANAGER.toggleCategory(filter, true);
-                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+        // Sidebar category buttons
+        int categoryY = 10;
+        
+        // All categories button
+        addDrawableChild(createCategoryButton(
+            Text.literal(selectedCategory == null ? "§a> Все <" : "   Все"),
+            () -> {
+                selectedCategory = null;
+                scrollOffset = 0;
                 rebuild();
-            }
-        }).dimensions(582, 12, 76, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Кат. OFF"), b -> {
-            if (filter != null) {
-                NovaClient.MODULE_MANAGER.toggleCategory(filter, false);
-                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-                rebuild();
-            }
-        }).dimensions(662, 12, 82, 20).build());
+            },
+            0, categoryY
+        ));
+        categoryY += 28;
 
-        int x = width / 2 - 100;
-        int y = 40 + 16;
-        for (Module module : filteredModules()) {
-            addDrawableChild(ButtonWidget.builder(label(module), b -> {
-                module.toggle();
-                b.setMessage(label(module));
-                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-            }).dimensions(x, y, 200, 20).build());
-            y += 22;
-
-            for (Setting<?> setting : module.getSettings()) {
-                if (setting instanceof BooleanSetting boolSetting) {
-                    addDrawableChild(ButtonWidget.builder(booleanLabel(boolSetting), b -> {
-                        boolSetting.set(!boolSetting.get());
-                        b.setMessage(booleanLabel(boolSetting));
-                        NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-                    }).dimensions(x + 8, y, 192, 18).build());
-                    y += 20;
-                } else if (setting instanceof NumberSetting numberSetting) {
-                    ButtonWidget labelButton = ButtonWidget.builder(numberLabel(numberSetting), b -> {
-                    }).dimensions(x + 36, y, 136, 18).build();
-                    labelButton.active = false;
-                    addDrawableChild(labelButton);
-
-                    addDrawableChild(ButtonWidget.builder(Text.literal("-"), b -> {
-                        numberSetting.set(numberSetting.get() - step(numberSetting));
-                        updateNumberButtons(numberSetting, labelButton);
-                        NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-                    }).dimensions(x + 8, y, 24, 18).build());
-
-                    addDrawableChild(ButtonWidget.builder(Text.literal("+"), b -> {
-                        numberSetting.set(numberSetting.get() + step(numberSetting));
-                        updateNumberButtons(numberSetting, labelButton);
-                        NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
-                    }).dimensions(x + 176, y, 24, 18).build());
-                    y += 20;
-                }
-            }
-
-            if (y > height - 50) {
-                x += 210;
-                y = 40;
-            }
+        // Individual category buttons
+        for (Category cat : Category.values()) {
+            long count = NovaClient.MODULE_MANAGER.getModules().stream()
+                    .filter(m -> m.getCategory() == cat)
+                    .count();
+            boolean isSelected = selectedCategory == cat;
+            String prefix = isSelected ? "§a> " : "   ";
+            String suffix = " §7(" + count + ")";
+            
+            addDrawableChild(createCategoryButton(
+                Text.literal(prefix + cat.displayName() + suffix),
+                () -> {
+                    selectedCategory = cat;
+                    scrollOffset = 0;
+                    rebuild();
+                },
+                0, categoryY
+            ));
+            categoryY += 28;
         }
-        addDrawableChild(ButtonWidget.builder(Text.literal("Назад"), b -> client.setScreen(parent)).dimensions(width / 2 - 50, height - 28, 100, 20).build());
+
+        // Filter toggle button at bottom of sidebar
+        addDrawableChild(ButtonWidget.builder(
+            Text.literal(showEnabledOnly ? "§a✓ Только ON" : "  Все модули"),
+            b -> {
+                showEnabledOnly = !showEnabledOnly;
+                scrollOffset = 0;
+                rebuild();
+            }
+        ).dimensions(5, height - 65, sidebarWidth - 10, 22).build());
+
+        // Back button
+        addDrawableChild(ButtonWidget.builder(
+            Text.literal("§c← Назад"),
+            b -> client.setScreen(parent)
+        ).dimensions(5, height - 38, sidebarWidth - 10, 22).build());
+
+        // Main content area - module list
+        List<Module> modules = getFilteredModules();
+        int contentX = sidebarWidth + 15;
+        int contentStartY = 45;
+        maxContentHeight = height - 55;
+        
+        // Title
+        String titleText = "§fМодули";
+        if (selectedCategory != null) {
+            titleText += " §7> §f" + selectedCategory.displayName();
+        }
+        if (showEnabledOnly) {
+            titleText += " §7[Только активные]";
+        }
+        
+        // Build module cards
+        int currentY = contentStartY - scrollOffset;
+        for (Module module : modules) {
+            if (currentY > maxContentHeight) {
+                break;
+            }
+            
+            int cardHeight = 42;
+            ModuleCard card = new ModuleCard(module, contentX, currentY, 320, cardHeight);
+            moduleCards.add(card);
+            
+            currentY += card.getTotalHeight() + 6;
+        }
+
+        // Quick actions at top right
+        int actionX = sidebarWidth + 20;
+        addDrawableChild(ButtonWidget.builder(
+            Text.literal("§aВкл. все"),
+            b -> {
+                NovaClient.MODULE_MANAGER.enableAll();
+                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                rebuild();
+            }
+        ).dimensions(actionX, 8, 75, 18).build());
+        
+        addDrawableChild(ButtonWidget.builder(
+            Text.literal("§cВыкл. все"),
+            b -> {
+                NovaClient.MODULE_MANAGER.disableAll();
+                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                rebuild();
+            }
+        ).dimensions(actionX + 80, 8, 80, 18).build());
+        
+        addDrawableChild(ButtonWidget.builder(
+            Text.literal("§eСброс"),
+            b -> {
+                NovaClient.MODULE_MANAGER.resetAllSettings();
+                NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                rebuild();
+            }
+        ).dimensions(actionX + 165, 8, 55, 18).build());
     }
 
-    private List<Module> filteredModules() {
+    private ButtonWidget createCategoryButton(Text text, Runnable action, int x, int y) {
+        return ButtonWidget.builder(text, b -> action.run())
+            .dimensions(x + 5, y, sidebarWidth - 10, 24)
+            .build();
+    }
+
+    private List<Module> getFilteredModules() {
         return NovaClient.MODULE_MANAGER.getModules().stream()
-                .filter(m -> !enabledOnly || m.isEnabled())
-                .filter(m -> filter == null || m.getCategory() == filter)
+                .filter(m -> selectedCategory == null || m.getCategory() == selectedCategory)
+                .filter(m -> !showEnabledOnly || m.isEnabled())
                 .toList();
     }
 
-    private Text label(Module m) {
-        return Text.literal((m.isEnabled() ? "§a[ON] " : "§c[OFF] ") + m.getName());
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Background gradient
+        context.fillGradient(0, 0, width, height, 0xFF0A0F1A, 0xFF121828);
+        
+        // Sidebar background
+        context.fill(0, 0, sidebarWidth, height, ColorHelper.Argb.getArgb(220, 12, 16, 28));
+        
+        // Sidebar separator line with glow
+        context.fill(sidebarWidth, 0, sidebarWidth + 3, height, ColorHelper.Argb.getArgb(180, 60, 80, 120));
+        
+        // Title
+        context.drawCenteredTextWithShadow(textRenderer, title, width / 2, 10, 0xFFFFFFFF);
+        
+        // Sidebar title
+        context.drawTextWithShadow(textRenderer, "§7Категории", 10, 5, 0xFF8899AA);
+        
+        // Module count info
+        List<Module> filtered = getFilteredModules();
+        String info = "§7" + filtered.size() + " модул.";
+        context.drawTextWithShadow(textRenderer, info, sidebarWidth + 10, 25, 0xFF667788);
+        
+        // Render module cards
+        for (ModuleCard card : moduleCards) {
+            renderModuleCard(context, card, mouseX, mouseY, delta);
+        }
+        
+        // Scroll indicators
+        if (scrollOffset > 0) {
+            context.fill(width - 25, 35, width - 8, 55, ColorHelper.Argb.getArgb(150, 50, 60, 80));
+            context.drawCenteredTextWithShadow(textRenderer, "▲", width - 16, 38, 0xFFFFFFFF);
+        }
+        
+        int totalContentHeight = moduleCards.stream().mapToInt(ModuleCard::getTotalHeight).sum() + moduleCards.size() * 6;
+        if (scrollOffset + getHeight() - 50 < totalContentHeight) {
+            context.fill(width - 25, height - 55, width - 8, height - 35, ColorHelper.Argb.getArgb(150, 50, 60, 80));
+            context.drawCenteredTextWithShadow(textRenderer, "▼", width - 16, height - 52, 0xFFFFFFFF);
+        }
+        
+        super.render(context, mouseX, mouseY, delta);
     }
 
-    private Text enabledLabel() {
-        return Text.literal(enabledOnly ? "Только: §aON" : "Показывать: Все");
+    private void renderModuleCard(DrawContext context, ModuleCard card, int mouseX, int mouseY, float delta) {
+        boolean hovered = card.isHovered(mouseX, mouseY);
+        
+        // Smooth hover animation
+        if (hovered) {
+            card.animAlpha = Math.min(1f, card.animAlpha + delta * 0.15f);
+        } else {
+            card.animAlpha = Math.max(0f, card.animAlpha - delta * 0.15f);
+        }
+        
+        // Card background
+        int baseAlpha = card.module.isEnabled() ? 200 : 160;
+        int alphaBoost = (int)(card.animAlpha * 40);
+        
+        // Glow effect for enabled modules
+        if (card.module.isEnabled()) {
+            int glowSize = (int)(3 + card.animAlpha * 6);
+            for (int g = glowSize; g > 0; g--) {
+                int glowAlpha = (int)(25 * card.animAlpha * (1f - (float)g / glowSize));
+                int glowColor = ColorHelper.Argb.getArgb(glowAlpha, 50, 200, 100);
+                context.fill(card.x - g, card.y - g, card.x + card.width + g, card.y + card.height + g, glowColor);
+            }
+        }
+        
+        // Main card gradient
+        int topColor = ColorHelper.Argb.getArgb(baseAlpha + alphaBoost, 
+            card.module.isEnabled() ? 20 : 15, 
+            card.module.isEnabled() ? 35 : 20, 
+            card.module.isEnabled() ? 50 : 35);
+        int bottomColor = ColorHelper.Argb.getArgb(baseAlpha + alphaBoost, 
+            card.module.isEnabled() ? 15 : 10, 
+            card.module.isEnabled() ? 25 : 15, 
+            card.module.isEnabled() ? 40 : 25);
+        context.fillGradient(card.x, card.y, card.x + card.width, card.y + card.height, topColor, bottomColor);
+        
+        // Border
+        int borderColor = ColorHelper.Argb.getArgb(100 + (int)(card.animAlpha * 155), 
+            card.module.isEnabled() ? 50 : 40, 
+            card.module.isEnabled() ? 180 : 100, 
+            card.module.isEnabled() ? 100 : 80);
+        context.fill(card.x - 1, card.y - 1, card.x + card.width + 1, card.y, borderColor);
+        context.fill(card.x - 1, card.y + card.height, card.x + card.width + 1, card.y + card.height + 1, borderColor);
+        context.fill(card.x - 1, card.y, card.x, card.y + card.height, borderColor);
+        context.fill(card.x + card.width, card.y, card.x + card.width + 1, card.y + card.height, borderColor);
+        
+        // Module name and status
+        String status = card.module.isEnabled() ? "§a[ON]" : "§c[OFF]";
+        String moduleName = "§f" + card.module.getName();
+        context.drawTextWithShadow(textRenderer, status, card.x + 8, card.y + 12, 0xFFFFFF);
+        context.drawTextWithShadow(textRenderer, moduleName, card.x + 50, card.y + 12, 0xFFFFFF);
+        
+        // Toggle button
+        int toggleBtnX = card.x + card.width - 70;
+        int toggleBtnY = card.y + 10;
+        int toggleBtnWidth = 60;
+        int toggleBtnHeight = 20;
+        
+        int btnColor = card.module.isEnabled() ? 
+            ColorHelper.Argb.getArgb(255, 40, 180, 80) : 
+            ColorHelper.Argb.getArgb(255, 180, 50, 50);
+        context.fill(toggleBtnX, toggleBtnY, toggleBtnX + toggleBtnWidth, toggleBtnY + toggleBtnHeight, btnColor);
+        
+        String btnText = card.module.isEnabled() ? "§fON" : "§fOFF";
+        context.drawCenteredTextWithShadow(textRenderer, btnText, toggleBtnX + toggleBtnWidth/2, toggleBtnY + 6, 0xFFFFFF);
+        
+        // Expand button (if has settings)
+        if (!card.module.getSettings().isEmpty()) {
+            int expandBtnX = toggleBtnX - 35;
+            int expandBtnY = toggleBtnY;
+            int expandBtnWidth = 30;
+            
+            int expandColor = ColorHelper.Argb.getArgb(255, 60, 80, 120);
+            context.fill(expandBtnX, expandBtnY, expandBtnX + expandBtnWidth, expandBtnY + toggleBtnHeight, expandColor);
+            
+            String expandText = card.expanded ? "§f▲" : "§f▼";
+            context.drawCenteredTextWithShadow(textRenderer, expandText, expandBtnX + expandBtnWidth/2, expandBtnY + 6, 0xFFFFFF);
+        }
+        
+        // Render settings if expanded
+        if (card.expanded && !card.module.getSettings().isEmpty()) {
+            int settingY = card.y + card.height + 6;
+            
+            for (Setting<?> setting : card.module.getSettings()) {
+                if (setting instanceof BooleanSetting boolSetting) {
+                    renderBooleanSetting(context, boolSetting, card.x, settingY, card.width, mouseX, mouseY);
+                    settingY += 24;
+                } else if (setting instanceof NumberSetting numberSetting) {
+                    renderNumberSetting(context, numberSetting, card.x, settingY, card.width, mouseX, mouseY);
+                    settingY += 24;
+                }
+            }
+        }
     }
 
-    private Text categoryLabel() {
-        return Text.literal("Категория: " + (filter == null ? "Все" : filter.displayName()));
+    private void renderBooleanSetting(DrawContext context, BooleanSetting setting, int x, int y, int width, int mouseX, int mouseY) {
+        int labelX = x + 10;
+        int toggleX = x + width - 50;
+        int toggleY = y + 2;
+        int toggleWidth = 40;
+        int toggleHeight = 18;
+        
+        // Label
+        context.drawTextWithShadow(textRenderer, "§7" + setting.getName() + ":", labelX, y + 4, 0xCCDDDD);
+        
+        // Toggle button
+        int btnColor = setting.get() ? ColorHelper.Argb.getArgb(255, 40, 160, 80) : ColorHelper.Argb.getArgb(255, 160, 50, 50);
+        context.fill(toggleX, toggleY, toggleX + toggleWidth, toggleY + toggleHeight, btnColor);
+        
+        String btnText = setting.get() ? "§fON" : "§fOFF";
+        context.drawCenteredTextWithShadow(textRenderer, btnText, toggleX + toggleWidth/2, toggleY + 4, 0xFFFFFF);
+        
+        // Check click
+        if (mouseX >= toggleX && mouseX <= toggleX + toggleWidth && mouseY >= toggleY && mouseY <= toggleY + toggleHeight) {
+            // Hover effect
+            context.fill(toggleX, toggleY, toggleX + toggleWidth, toggleY + toggleHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
+        }
     }
 
-    private Category nextCategory(Category current) {
-        if (current == null) return Category.values()[0];
-        int idx = current.ordinal() + 1;
-        return idx >= Category.values().length ? null : Category.values()[idx];
-    }
-
-    private Text booleanLabel(BooleanSetting setting) {
-        return Text.literal("  " + setting.getName() + ": " + (setting.get() ? "§aON" : "§cOFF"));
-    }
-
-    private Text numberLabel(NumberSetting setting) {
-        return Text.literal(" " + setting.getName() + ": " + format(setting.get()));
+    private void renderNumberSetting(DrawContext context, NumberSetting setting, int x, int y, int width, int mouseX, int mouseY) {
+        int labelX = x + 10;
+        int btnWidth = 25;
+        int btnHeight = 18;
+        int valueWidth = 80;
+        int startY = y + 2;
+        
+        // Label
+        context.drawTextWithShadow(textRenderer, "§7" + setting.getName() + ":", labelX, y + 4, 0xCCDDDD);
+        
+        // Minus button
+        int minusX = x + width - btnWidth * 2 - valueWidth - 5;
+        context.fill(minusX, startY, minusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 60, 80, 120));
+        context.drawCenteredTextWithShadow(textRenderer, "§f-", minusX + btnWidth/2, startY + 4, 0xFFFFFF);
+        
+        // Value display
+        int valueX = minusX + btnWidth + 2;
+        context.fill(valueX, startY, valueX + valueWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 40, 50, 70));
+        String valueText = format(setting.get());
+        context.drawCenteredTextWithShadow(textRenderer, "§f" + valueText, valueX + valueWidth/2, startY + 4, 0xFFFFFF);
+        
+        // Plus button
+        int plusX = valueX + valueWidth + 2;
+        context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 60, 80, 120));
+        context.drawCenteredTextWithShadow(textRenderer, "§f+", plusX + btnWidth/2, startY + 4, 0xFFFFFF);
+        
+        // Check clicks
+        if (mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
+            context.fill(minusX, startY, minusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
+        }
+        if (mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
+            context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
+        }
     }
 
     private String format(double value) {
         return Math.abs(value - Math.rint(value)) < 1e-6 ? String.valueOf((int) Math.rint(value)) : String.format("%.2f", value);
     }
 
-    private double step(NumberSetting setting) {
+    private double getStep(NumberSetting setting) {
         return setting.getMax() - setting.getMin() > 20 ? 1.0 : 0.1;
     }
 
-    private void updateNumberButtons(NumberSetting setting, ButtonWidget labelButton) {
-        labelButton.setMessage(numberLabel(setting));
-    }
-
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        context.fillGradient(0, 0, width, height, 0xEE111521, 0xEE1A2030);
-        context.drawCenteredTextWithShadow(textRenderer, title, width / 2, 14, 0xFFFFFFFF);
-        super.render(context, mouseX, mouseY, delta);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Check module card clicks
+        for (ModuleCard card : moduleCards) {
+            if (card.isHovered((int)mouseX, (int)mouseY)) {
+                int toggleBtnX = card.x + card.width - 70;
+                int toggleBtnY = card.y + 10;
+                
+                // Toggle button click
+                if (mouseX >= toggleBtnX && mouseX <= toggleBtnX + 60 && mouseY >= toggleBtnY && mouseY <= toggleBtnY + 20) {
+                    card.module.toggle();
+                    NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                    rebuild();
+                    return true;
+                }
+                
+                // Expand button click
+                if (!card.module.getSettings().isEmpty()) {
+                    int expandBtnX = toggleBtnX - 35;
+                    if (mouseX >= expandBtnX && mouseX <= expandBtnX + 30 && mouseY >= toggleBtnY && mouseY <= toggleBtnY + 20) {
+                        card.expanded = !card.expanded;
+                        rebuild();
+                        return true;
+                    }
+                }
+            }
+            
+            // Check setting clicks for expanded cards
+            if (card.expanded && !card.module.getSettings().isEmpty()) {
+                int settingY = card.y + card.height + 6;
+                for (Setting<?> setting : card.module.getSettings()) {
+                    if (setting instanceof BooleanSetting boolSetting) {
+                        int toggleX = card.x + card.width - 50;
+                        if (mouseX >= toggleX && mouseX <= toggleX + 40 && mouseY >= settingY + 2 && mouseY <= settingY + 20) {
+                            boolSetting.set(!boolSetting.get());
+                            NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                            rebuild();
+                            return true;
+                        }
+                        settingY += 24;
+                    } else if (setting instanceof NumberSetting numberSetting) {
+                        int btnWidth = 25;
+                        int valueWidth = 80;
+                        int minusX = card.x + card.width - btnWidth * 2 - valueWidth - 5;
+                        int plusX = minusX + btnWidth + valueWidth + 4;
+                        
+                        if (mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= settingY + 2 && mouseY <= settingY + 20) {
+                            numberSetting.set(Math.max(numberSetting.getMin(), numberSetting.get() - getStep(numberSetting)));
+                            NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                            rebuild();
+                            return true;
+                        }
+                        if (mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= settingY + 2 && mouseY <= settingY + 20) {
+                            numberSetting.set(Math.min(numberSetting.getMax(), numberSetting.get() + getStep(numberSetting)));
+                            NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
+                            rebuild();
+                            return true;
+                        }
+                        settingY += 24;
+                    }
+                }
+            }
+        }
+        
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+    
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (mouseX > sidebarWidth) { // Only scroll in main content area
+            List<Module> modules = getFilteredModules();
+            int maxScroll = Math.max(0, moduleCards.stream().mapToInt(ModuleCard::getTotalHeight).sum() + moduleCards.size() * 6 - maxContentHeight);
+            
+            if (verticalAmount < 0) {
+                scrollOffset = Math.min(maxScroll, scrollOffset + 20);
+            } else {
+                scrollOffset = Math.max(0, scrollOffset - 20);
+            }
+            rebuild();
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 }
