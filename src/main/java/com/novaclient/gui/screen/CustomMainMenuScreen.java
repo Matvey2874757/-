@@ -21,6 +21,8 @@ public final class CustomMainMenuScreen extends Screen {
     private final List<Comet> comets = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final Random random = new Random();
+    private int hoveredButton = -1;
+    private final List<MenuButton> menuButtons = new ArrayList<>();
 
     private static class Comet {
         float x, y, speedX, speedY, size, alpha;
@@ -61,6 +63,26 @@ public final class CustomMainMenuScreen extends Screen {
         }
     }
 
+    private static class MenuButton {
+        int x, y, width, height;
+        Text text;
+        Runnable action;
+        float hoverAlpha = 0f;
+        
+        MenuButton(int x, int y, int width, int height, Text text, Runnable action) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.text = text;
+            this.action = action;
+        }
+        
+        boolean isHovered(int mouseX, int mouseY) {
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        }
+    }
+
     public CustomMainMenuScreen(Screen parent) {
         super(Text.literal("NovaClient"));
         this.parent = parent;
@@ -80,13 +102,24 @@ public final class CustomMainMenuScreen extends Screen {
             comets.add(new Comet(width, height));
         }
         
+        // Create menu buttons
+        menuButtons.clear();
         int cx = width / 2;
-        int y = height / 2 - 40;
-        addDrawableChild(ButtonWidget.builder(Text.literal("Одиночная игра"), b -> client.setScreen(new SelectWorldScreen(this))).dimensions(cx - 80, y, 160, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Сетевая игра"), b -> client.setScreen(new MultiplayerScreen(this))).dimensions(cx - 80, y + 24, 160, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Модули"), b -> client.setScreen(new ModuleScreen(this))).dimensions(cx - 80, y + 48, 160, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Настройки"), b -> client.setScreen(new OptionsScreen(this, client.options))).dimensions(cx - 80, y + 72, 160, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Выход"), b -> MinecraftClient.getInstance().scheduleStop()).dimensions(cx - 80, y + 96, 160, 20).build());
+        int y = height / 2 - 50;
+        int btnWidth = 200;
+        int btnHeight = 36;
+        int spacing = 8;
+        
+        menuButtons.add(new MenuButton(cx - btnWidth/2, y, btnWidth, btnHeight, 
+            Text.literal("Одиночная игра"), () -> client.setScreen(new SelectWorldScreen(this))));
+        menuButtons.add(new MenuButton(cx - btnWidth/2, y + btnHeight + spacing, btnWidth, btnHeight, 
+            Text.literal("Сетевая игра"), () -> client.setScreen(new MultiplayerScreen(this))));
+        menuButtons.add(new MenuButton(cx - btnWidth/2, y + (btnHeight + spacing) * 2, btnWidth, btnHeight, 
+            Text.literal("Модули"), () -> client.setScreen(new ModuleScreen(this))));
+        menuButtons.add(new MenuButton(cx - btnWidth/2, y + (btnHeight + spacing) * 3, btnWidth, btnHeight, 
+            Text.literal("Настройки"), () -> client.setScreen(new OptionsScreen(this, client.options))));
+        menuButtons.add(new MenuButton(cx - btnWidth/2, y + (btnHeight + spacing) * 4, btnWidth, btnHeight, 
+            Text.literal("Выход"), () -> MinecraftClient.getInstance().scheduleStop()));
     }
 
     @Override
@@ -154,7 +187,69 @@ public final class CustomMainMenuScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, "Fabric 1.21.1 | Легальный QoL клиент", width / 2, 52,
                 ColorHelper.Argb.getArgb(titleAlpha, 180, 210, 255));
 
+        // Render beautiful buttons
+        int buttonIndex = 0;
+        for (MenuButton btn : menuButtons) {
+            boolean hovered = btn.isHovered(mouseX, mouseY);
+            
+            // Smooth hover animation
+            if (hovered) {
+                btn.hoverAlpha = Math.min(1f, btn.hoverAlpha + delta * 0.15f);
+            } else {
+                btn.hoverAlpha = Math.max(0f, btn.hoverAlpha - delta * 0.15f);
+            }
+            
+            // Button background with gradient
+            int baseAlpha = 180;
+            int hoverBoost = (int)(btn.hoverAlpha * 40);
+            int borderAlpha = (int)(100 + btn.hoverAlpha * 155);
+            
+            // Outer glow
+            int glowSize = (int)(4 + btn.hoverAlpha * 8);
+            for (int g = glowSize; g > 0; g--) {
+                int glowAlpha = (int)(30 * btn.hoverAlpha * (1f - (float)g / glowSize));
+                int glowColor = ColorHelper.Argb.getArgb(glowAlpha, 100, 180, 255);
+                context.fill(btn.x - g, btn.y - g, btn.x + btn.width + g, btn.y + btn.height + g, glowColor);
+            }
+            
+            // Main button gradient
+            int topColor = ColorHelper.Argb.getArgb(baseAlpha + hoverBoost, 30 + (int)(btn.hoverAlpha * 30), 40 + (int)(btn.hoverAlpha * 40), 60 + (int)(btn.hoverAlpha * 60));
+            int bottomColor = ColorHelper.Argb.getArgb(baseAlpha + hoverBoost, 20 + (int)(btn.hoverAlpha * 20), 30 + (int)(btn.hoverAlpha * 30), 50 + (int)(btn.hoverAlpha * 50));
+            context.fillGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height, topColor, bottomColor);
+            
+            // Border
+            int borderColor = ColorHelper.Argb.getArgb(borderAlpha, 80 + (int)(btn.hoverAlpha * 100), 150 + (int)(btn.hoverAlpha * 105), 255);
+            context.fill(btn.x - 1, btn.y - 1, btn.x + btn.width + 1, btn.y, borderColor); // Top
+            context.fill(btn.x - 1, btn.y + btn.height, btn.x + btn.width + 1, btn.y + btn.height + 1, borderColor); // Bottom
+            context.fill(btn.x - 1, btn.y, btn.x, btn.y + btn.height, borderColor); // Left
+            context.fill(btn.x + btn.width, btn.y, btn.x + btn.width + 1, btn.y + btn.height, borderColor); // Right
+            
+            // Inner highlight
+            int highlightAlpha = (int)(50 * btn.hoverAlpha);
+            int highlightColor = ColorHelper.Argb.getArgb(highlightAlpha, 255, 255, 255);
+            context.fill(btn.x + 2, btn.y + 2, btn.x + btn.width - 2, btn.y + 8, highlightColor);
+            
+            // Button text
+            int textColor = ColorHelper.Argb.getArgb(255, 255, 255, 255);
+            int textX = btn.x + btn.width / 2;
+            int textY = btn.y + btn.height / 2 - textRenderer.fontHeight / 2;
+            context.drawCenteredTextWithShadow(textRenderer, btn.text, textX, textY, textColor);
+            
+            buttonIndex++;
+        }
+
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (MenuButton btn : menuButtons) {
+            if (btn.isHovered((int)mouseX, (int)mouseY)) {
+                btn.action.run();
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
