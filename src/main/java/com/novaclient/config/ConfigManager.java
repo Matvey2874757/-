@@ -38,8 +38,14 @@ public final class ConfigManager {
                 modJson.add("settings", settings);
                 root.add(module.getName(), modJson);
             }
-            Files.writeString(file, GSON.toJson(root));
-        } catch (IOException ignored) {
+            Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
+            Files.writeString(tmp, GSON.toJson(root));
+            if (Files.exists(file)) {
+                Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            System.err.println("[NovaClient] Failed to save config: " + e.getMessage());
         }
     }
 
@@ -62,7 +68,8 @@ public final class ConfigManager {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            System.err.println("[NovaClient] Failed to load config: " + e.getMessage());
         }
     }
 }

@@ -14,5 +14,8 @@ public final class TargetHudModule extends HudTextModule {
         if (!(ClientRefs.MC.targetedEntity instanceof LivingEntity living)) return;
         drawLine(context, "Target: " + living.getName().getString(), 0, 0xFFFFFFFF);
         drawLine(context, String.format("HP: %.1f/%.1f", living.getHealth(), living.getMaxHealth()), 1, 0xFFFF6666);
+        if (ClientRefs.MC.player != null) {
+            drawLine(context, String.format("Dist: %.2f", ClientRefs.MC.player.distanceTo(living)), 2, 0xFFAAAAFF);
+        }
     }
 }

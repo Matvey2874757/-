@@ -2,10 +2,12 @@ package com.novaclient.module;
 
 public abstract class Setting<T> {
     private final String name;
+    private final T defaultValue;
     private T value;
 
     protected Setting(String name, T defaultValue) {
         this.name = name;
+        this.defaultValue = defaultValue;
         this.value = defaultValue;
     }
 
@@ -19,5 +21,13 @@ public abstract class Setting<T> {
 
     public void set(T value) {
         this.value = value;
+    }
+
+    public T getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void reset() {
+        set(defaultValue);
     }
 }
