@@ -21,8 +21,8 @@ public final class FpsPingModule extends HudTextModule {
         
         String text = compact.get() ? (fps + " FPS / " + ping + "ms") : ("FPS: " + fps + " | Ping: " + ping);
         int lineHeight = getTextHeight();
-        int totalHeight = lineHeight;
-        int maxWidth = getTextWidth(text);
+        int totalHeight = compact.get() ? lineHeight : lineHeight * 2;
+        int maxWidth = compact.get() ? getTextWidth(text) : Math.max(getTextWidth("FPS: " + fps), getTextWidth("Ping: " + ping));
         
         // Цвет текста зависит от FPS и пинга
         int fpsColor = fps > 60 ? 0xFF00FF00 : (fps > 30 ? 0xFFFFFF00 : 0xFFFF0000);

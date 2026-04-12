@@ -1,7 +1,5 @@
 package com.novaclient.module.hud;
 
-import com.novaclient.module.Category;
-import com.novaclient.module.Module;
 import com.novaclient.module.BooleanSetting;
 import com.novaclient.util.ClientRefs;
 import net.fabricmc.loader.api.FabricLoader;
@@ -13,13 +11,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-public final class ScreenshotManagerModule extends Module {
+public final class ScreenshotManagerModule extends HudTextModule {
     public final BooleanSetting showHud = addSetting(new BooleanSetting("Show HUD", true));
     private long lastRefreshAt;
     private int screenshotsCount;
 
     public ScreenshotManagerModule() {
-        super("Screenshot Manager", "Просмотр скриншотов внутри клиента", Category.HUD);
+        super("Screenshot Manager", "Просмотр скриншотов внутри клиента", 8, 188);
     }
 
     @Override
@@ -39,26 +37,21 @@ public final class ScreenshotManagerModule extends Module {
     public void renderHud(DrawContext context, float tickDelta) {
         if (!showHud.get() || ClientRefs.MC.textRenderer == null) return;
         
-        // Рисуем фон для скриншот менеджера
         String text = "Screenshots: " + screenshotsCount;
         int width = getTextWidth(text);
         int height = 10;
         
-        int startX = (int)(x.get().intValue() * scale.get());
-        int startY = (int)(y.get().intValue() * scale.get());
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
         
-        // Фон
-        context.fill(startX - 3, startY - 2, startX + width + 3, startY + height + 2, 0xAA000000);
-        
-        // Синяя линия сверху
-        context.drawHorizontalLine(startX - 2, startX + width + 2, startY - 2, 0xFF3498DB);
+        renderBackground(context, width, height);
         
         // Текст
         context.drawTextWithShadow(
             ClientRefs.MC.textRenderer,
             text,
-            startX,
-            startY,
+            renderX,
+            renderY,
             0xFFE5E5E5
         );
     }

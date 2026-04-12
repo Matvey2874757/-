@@ -21,8 +21,8 @@ public final class ArmorStatusModule extends HudTextModule {
         
         renderBackground(context, totalWidth, totalHeight);
         
-        int startX = (int)(x.get().intValue() * scale.get());
-        int startY = (int)(y.get().intValue() * scale.get());
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
         
         int slot = 0;
         for (var stack : ClientRefs.MC.player.getArmorItems()) {
@@ -32,8 +32,8 @@ public final class ArmorStatusModule extends HudTextModule {
             int left = max - stack.getDamage();
             int pct = (int) ((left * 100.0) / max);
             
-            int x = startX + slot * (iconSize + gap);
-            int y = startY;
+            int x = renderX + slot * (iconSize + gap);
+            int y = renderY;
             
             // Рисуем иконку брони
             context.drawItem(stack, x, y);

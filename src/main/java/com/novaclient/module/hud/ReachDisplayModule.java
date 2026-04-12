@@ -46,4 +46,15 @@ public final class ReachDisplayModule extends HudTextModule {
         drawLine(context, lines[0], 0, reachColor);
         drawLine(context, lines[1], 1, 0xFFBBBBBB);
     }
+
+    @Override
+    public void tick() {
+        if (ClientRefs.MC.targetedEntity != null && ClientRefs.MC.player != null) {
+            double reach = ClientRefs.MC.player.distanceTo(ClientRefs.MC.targetedEntity);
+            maxReach = Math.max(maxReach, reach);
+        } else {
+            // Сбрасываем maxReach если цели нет
+            maxReach = 0;
+        }
+    }
 }

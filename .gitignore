@@ -3,14 +3,22 @@
 *.class
 *.o
 *.obj
+*.exe
+*.dll
+*.so
+*.a
 *.out
 build/
-target/
+dist/
 
 # Dependencies
-.gradle/
-libs/
 lib/
+target/
+.gradle/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
+*.egg-info/
 
 # Logs and temp files
 *.log
@@ -25,29 +33,39 @@ lib/
 # Editors
 .vscode/
 .idea/
-*.iml
-*.iws
-*.ipr
+*.swp
+*.swo
 
 # System files
 .DS_Store
 Thumbs.db
 
-# Coverage reports
+# Coverage
 coverage/
 htmlcov/
 .coverage
 
-# MyPy cache
-.mypy_cache/
-.pytest_cache/
-
-# Distribution artifacts
-dist/
-*.jar
-*.war
-*.ear
+# Compressed files
 *.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
 *.tar.gz
 *.tar.bz2
+*.tar.xz
+*.tar.zst
 ```

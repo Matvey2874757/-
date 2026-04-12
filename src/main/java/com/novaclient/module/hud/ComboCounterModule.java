@@ -2,6 +2,7 @@ package com.novaclient.module.hud;
 
 import com.novaclient.util.ClientRefs;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.entity.LivingEntity;
 
 public final class ComboCounterModule extends HudTextModule {
     public final NumberSetting resetDelayMs = addSetting(new NumberSetting("Reset Delay", 1600, 500, 5000));

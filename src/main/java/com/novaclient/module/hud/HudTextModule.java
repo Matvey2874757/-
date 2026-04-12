@@ -23,13 +23,13 @@ public abstract class HudTextModule extends Module {
 
     protected void drawLine(DrawContext context, String text, int line, int color) {
         if (net.minecraft.client.MinecraftClient.getInstance().textRenderer == null) return;
-        int scaledX = (int)(x.get().intValue() * scale.get());
-        int scaledY = (int)(y.get().intValue() + line * 10 * scale.get());
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() + line * 10 * scale.get().doubleValue());
         context.drawTextWithShadow(
                 net.minecraft.client.MinecraftClient.getInstance().textRenderer,
                 text,
-                scaledX,
-                scaledY,
+                renderX,
+                renderY,
                 color
         );
     }
@@ -38,20 +38,20 @@ public abstract class HudTextModule extends Module {
         int bgAlpha = backgroundColor.get().intValue();
         int borderAlpha = borderColor.get().intValue();
         
-        int x = (int)(x.get().intValue() * scale.get());
-        int y = (int)(y.get().intValue() * scale.get());
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
         
         // Рисуем основной фон (темный полупрозрачный)
-        context.fill(x - 3, y - 3, x + width + 3, y + height + 3, 0xAA000000);
+        context.fill(renderX - 3, renderY - 3, renderX + width + 3, renderY + height + 3, 0xAA000000);
         
         // Рисуем внутреннюю рамку (более светлая)
-        context.drawHorizontalLine(x - 3, x + width + 3, y - 3, (borderAlpha << 24) | 0x404040);
-        context.drawHorizontalLine(x - 3, x + width + 3, y + height + 3, (borderAlpha << 24) | 0x404040);
-        context.drawVerticalLine(x - 3, y - 3, y + height + 3, (borderAlpha << 24) | 0x404040);
-        context.drawVerticalLine(x + width + 3, y - 3, y + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawHorizontalLine(renderX - 3, renderX + width + 3, renderY - 3, (borderAlpha << 24) | 0x404040);
+        context.drawHorizontalLine(renderX - 3, renderX + width + 3, renderY + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawVerticalLine(renderX - 3, renderY - 3, renderY + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawVerticalLine(renderX + width + 3, renderY - 3, renderY + height + 3, (borderAlpha << 24) | 0x404040);
         
         // Рисуем верхний акцент (синяя линия сверху для современного вида)
-        context.drawHorizontalLine(x - 2, x + width + 2, y - 2, 0xFF3498DB);
+        context.drawHorizontalLine(renderX - 2, renderX + width + 2, renderY - 2, 0xFF3498DB);
     }
 
     protected int getTextWidth(String text) {

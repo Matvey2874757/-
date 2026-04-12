@@ -20,8 +20,8 @@ public final class KeystrokesModule extends HudTextModule {
     public void renderHud(DrawContext context, float tickDelta) {
         if (ClientRefs.MC.options == null) return;
         
-        int startX = (int)(x.get().intValue() * scale.get());
-        int startY = (int)(y.get().intValue() * scale.get());
+        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
         
         // Рисуем фон
         int totalWidth = BUTTON_SIZE * 3 + GAP * 2;
@@ -33,25 +33,25 @@ public final class KeystrokesModule extends HudTextModule {
         renderBackground(context, totalWidth, totalHeight);
         
         // Row 1: W
-        drawKeyButton(context, startX + BUTTON_SIZE + GAP, startY, ClientRefs.MC.options.forwardKey.isPressed(), "W");
+        drawKeyButton(context, renderX + BUTTON_SIZE + GAP, renderY, ClientRefs.MC.options.forwardKey.isPressed(), "W");
         
         // Row 2: A S D
-        drawKeyButton(context, startX, startY + BUTTON_SIZE + GAP, ClientRefs.MC.options.leftKey.isPressed(), "A");
-        drawKeyButton(context, startX + BUTTON_SIZE + GAP, startY + BUTTON_SIZE + GAP, ClientRefs.MC.options.backKey.isPressed(), "S");
-        drawKeyButton(context, startX + (BUTTON_SIZE + GAP) * 2, startY + BUTTON_SIZE + GAP, ClientRefs.MC.options.rightKey.isPressed(), "D");
+        drawKeyButton(context, renderX, renderY + BUTTON_SIZE + GAP, ClientRefs.MC.options.leftKey.isPressed(), "A");
+        drawKeyButton(context, renderX + BUTTON_SIZE + GAP, renderY + BUTTON_SIZE + GAP, ClientRefs.MC.options.backKey.isPressed(), "S");
+        drawKeyButton(context, renderX + (BUTTON_SIZE + GAP) * 2, renderY + BUTTON_SIZE + GAP, ClientRefs.MC.options.rightKey.isPressed(), "D");
         
         // Row 3: LMB RMB
-        drawKeyButton(context, startX, startY + (BUTTON_SIZE + GAP) * 2, ClientRefs.MC.options.attackKey.isPressed(), "L");
-        drawKeyButton(context, startX + BUTTON_SIZE + GAP, startY + (BUTTON_SIZE + GAP) * 2, ClientRefs.MC.options.useKey.isPressed(), "R");
+        drawKeyButton(context, renderX, renderY + (BUTTON_SIZE + GAP) * 2, ClientRefs.MC.options.attackKey.isPressed(), "L");
+        drawKeyButton(context, renderX + BUTTON_SIZE + GAP, renderY + (BUTTON_SIZE + GAP) * 2, ClientRefs.MC.options.useKey.isPressed(), "R");
         
         // CPS
         if (showCps.get()) {
-            int cpsY = startY + (BUTTON_SIZE + GAP) * 2 + BUTTON_SIZE + 2;
+            int cpsY = renderY + (BUTTON_SIZE + GAP) * 2 + BUTTON_SIZE + 2;
             String cpsText = "CPS: " + (ClientRefs.MC.options.attackKey.isPressed() ? "~" + demoCps.get().intValue() : "0");
             context.drawTextWithShadow(
                 net.minecraft.client.MinecraftClient.getInstance().textRenderer,
                 cpsText,
-                startX,
+                renderX,
                 cpsY,
                 0xFFAAAAAA
             );
