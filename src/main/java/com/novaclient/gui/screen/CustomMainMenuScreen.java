@@ -126,10 +126,10 @@ public final class CustomMainMenuScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         anim = Math.min(1f, anim + delta * 0.05f);
         
-        // Deep space background gradient - reduced opacity to prevent blur overlay effect
-        int bg1 = ColorHelper.Argb.getArgb(240, 5, 8, 20);
-        int bg2 = ColorHelper.Argb.getArgb(240, 15, 20, 45);
-        int bg3 = ColorHelper.Argb.getArgb(240, 25, 30, 60);
+        // Deep space background gradient - fully opaque (alpha 255)
+        int bg1 = ColorHelper.Argb.getArgb(255, 5, 8, 20);
+        int bg2 = ColorHelper.Argb.getArgb(255, 15, 20, 45);
+        int bg3 = ColorHelper.Argb.getArgb(255, 25, 30, 60);
         context.fillGradient(0, 0, width, height / 2, bg1, bg2);
         context.fillGradient(0, height / 2, width, height, bg2, bg3);
         
@@ -255,6 +255,11 @@ public final class CustomMainMenuScreen extends Screen {
     @Override
     public boolean shouldPause() {
         return false;
+    }
+
+    @Override
+    protected void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Empty method to prevent rendering blurred world background
     }
     
     @Override

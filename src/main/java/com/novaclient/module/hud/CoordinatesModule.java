@@ -15,9 +15,28 @@ public final class CoordinatesModule extends HudTextModule {
     public void renderHud(DrawContext context, float tickDelta) {
         if (ClientRefs.MC.player == null) return;
         var p = ClientRefs.MC.player;
-        drawLine(context, String.format("XYZ: %.1f %.1f %.1f", p.getX(), p.getY(), p.getZ()), 0, 0xFFFFFFFF);
+        
+        String[] lines = new String[] {
+            String.format("XYZ: %.1f %.1f %.1f", p.getX(), p.getY(), p.getZ())
+        };
+        
         if (showYaw.get()) {
-            drawLine(context, "Yaw: " + Math.round(p.getYaw()), 1, 0xFFFFFFFF);
+            lines = java.util.Arrays.copyOf(lines, lines.length + 1);
+            lines[lines.length - 1] = "Yaw: " + Math.round(p.getYaw());
+        }
+        
+        int lineHeight = getTextHeight();
+        int totalHeight = lines.length * lineHeight;
+        int maxWidth = 0;
+        
+        for (String line : lines) {
+            maxWidth = Math.max(maxWidth, getTextWidth(line));
+        }
+        
+        renderBackground(context, maxWidth, totalHeight);
+        
+        for (int i = 0; i < lines.length; i++) {
+            drawLine(context, lines[i], i, 0xFFFFFFFF);
         }
     }
 }

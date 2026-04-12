@@ -192,13 +192,13 @@ public final class ModuleScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Background gradient - reduced opacity to prevent blur overlay effect
-        int bgTop = ColorHelper.Argb.getArgb(230, 10, 15, 26);
-        int bgBottom = ColorHelper.Argb.getArgb(230, 18, 24, 40);
+        // Background gradient - fully opaque (alpha 255)
+        int bgTop = ColorHelper.Argb.getArgb(255, 10, 15, 26);
+        int bgBottom = ColorHelper.Argb.getArgb(255, 18, 24, 40);
         context.fillGradient(0, 0, width, height, bgTop, bgBottom);
         
-        // Sidebar background - slightly more transparent
-        context.fill(0, 0, sidebarWidth, height, ColorHelper.Argb.getArgb(200, 12, 16, 28));
+        // Sidebar background - fully opaque
+        context.fill(0, 0, sidebarWidth, height, ColorHelper.Argb.getArgb(255, 12, 16, 28));
         
         // Sidebar separator line with glow
         context.fill(sidebarWidth, 0, sidebarWidth + 3, height, ColorHelper.Argb.getArgb(180, 60, 80, 120));
@@ -477,5 +477,15 @@ public final class ModuleScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    @Override
+    protected void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Empty method to prevent rendering blurred world background
+    }
+
+    @Override
+    public boolean shouldPause() {
+        return false;
     }
 }

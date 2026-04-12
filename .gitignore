@@ -1,1 +1,54 @@
-Nothing should be ignored based on the provided file changes, as they only include source code files (.java) without any build artifacts, dependencies, or temporary files.
+```
+# Java/Minecraft project specific ignores
+*.class
+*.jar
+*.war
+*.ear
+
+# Build artifacts
+target/
+build/
+dist/
+out/
+
+# Dependencies
+lib/
+libs/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
+
+# Compiled Python (if any mixed languages)
+*.pyc
+__pycache__/
+
+# Gradle (common in Minecraft projects)
+.gradle/
+.gradle-wrapper/
+
+# Local configuration
+local.properties
+```

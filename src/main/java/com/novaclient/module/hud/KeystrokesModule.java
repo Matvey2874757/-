@@ -16,11 +16,31 @@ public final class KeystrokesModule extends HudTextModule {
     @Override
     public void renderHud(DrawContext context, float tickDelta) {
         if (ClientRefs.MC.options == null) return;
-        drawLine(context, "W: " + key(ClientRefs.MC.options.forwardKey.isPressed()), 0, 0xFFFFFFFF);
-        drawLine(context, "A: " + key(ClientRefs.MC.options.leftKey.isPressed()) + " S: " + key(ClientRefs.MC.options.backKey.isPressed()) + " D: " + key(ClientRefs.MC.options.rightKey.isPressed()), 1, 0xFFFFFFFF);
-        drawLine(context, "LMB: " + key(ClientRefs.MC.options.attackKey.isPressed()) + " RMB: " + key(ClientRefs.MC.options.useKey.isPressed()), 2, 0xFFFFFFFF);
+        
+        String[] lines = new String[] {
+            "W: " + key(ClientRefs.MC.options.forwardKey.isPressed()),
+            "A: " + key(ClientRefs.MC.options.leftKey.isPressed()) + " S: " + key(ClientRefs.MC.options.backKey.isPressed()) + " D: " + key(ClientRefs.MC.options.rightKey.isPressed()),
+            "LMB: " + key(ClientRefs.MC.options.attackKey.isPressed()) + " RMB: " + key(ClientRefs.MC.options.useKey.isPressed())
+        };
+        
         if (showCps.get()) {
-            drawLine(context, "CPS: " + (ClientRefs.MC.options.attackKey.isPressed() ? "~" + demoCps.get().intValue() : "0"), 3, 0xFFAAAAAA);
+            lines = java.util.Arrays.copyOf(lines, lines.length + 1);
+            lines[lines.length - 1] = "CPS: " + (ClientRefs.MC.options.attackKey.isPressed() ? "~" + demoCps.get().intValue() : "0");
+        }
+        
+        int lineHeight = getTextHeight();
+        int totalHeight = lines.length * lineHeight;
+        int maxWidth = 0;
+        
+        for (String line : lines) {
+            maxWidth = Math.max(maxWidth, getTextWidth(line));
+        }
+        
+        renderBackground(context, maxWidth, totalHeight);
+        
+        for (int i = 0; i < lines.length; i++) {
+            int color = i == lines.length - 1 && showCps.get() ? 0xFFAAAAAA : 0xFFFFFFFF;
+            drawLine(context, lines[i], i, color);
         }
     }
 
