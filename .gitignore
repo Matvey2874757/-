@@ -1,0 +1,45 @@
+```
+# Compiled and build artifacts
+*.class
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.out
+# Dependencies
+lib/
+libs/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+# Environment
+.env
+.env.local
+*.env.*
+# Editors
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# Build directories
+build/
+dist/
+target/
+# Gradle
+.gradle/
+# Python cache
+.mypy_cache/
+.pytest_cache/
+# Coverage
+coverage/
+htmlcov/
+.coverage
+# System files
+.DS_Store
+Thumbs.db
+```
