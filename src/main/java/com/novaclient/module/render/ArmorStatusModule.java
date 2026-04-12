@@ -1,13 +1,11 @@
 package com.novaclient.module.render;
 
-import com.novaclient.module.BooleanSetting;
 import com.novaclient.module.hud.HudTextModule;
 import com.novaclient.util.ClientRefs;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.item.ArmorItem;
 
 public final class ArmorStatusModule extends HudTextModule {
-    public final BooleanSetting shortNames = addSetting(new BooleanSetting("Short Names", true));
-
     public ArmorStatusModule() {
         super("Armor Status", "Износ брони в процентах", 8, 78);
     }
@@ -15,14 +13,43 @@ public final class ArmorStatusModule extends HudTextModule {
     @Override
     public void renderHud(DrawContext context, float tickDelta) {
         if (ClientRefs.MC.player == null) return;
-        int line = 0;
+        
+        int iconSize = 16;
+        int gap = 4;
+        int totalWidth = iconSize * 4 + gap * 3;
+        int totalHeight = iconSize + 10; // + место для процентов
+        
+        renderBackground(context, totalWidth, totalHeight);
+        
+        int startX = (int)(x.get().intValue() * scale.get());
+        int startY = (int)(y.get().intValue() * scale.get());
+        
+        int slot = 0;
         for (var stack : ClientRefs.MC.player.getArmorItems()) {
-            if (!stack.isDamageable()) continue;
+            if (!stack.isDamageable() || !(stack.getItem() instanceof ArmorItem)) continue;
+            
             int max = stack.getMaxDamage();
             int left = max - stack.getDamage();
             int pct = (int) ((left * 100.0) / max);
-            String name = shortNames.get() ? stack.getItem().toString() : stack.getName().getString();
-            drawLine(context, name + ": " + pct + "%", line++, 0xFFFFFFFF);
+            
+            int x = startX + slot * (iconSize + gap);
+            int y = startY;
+            
+            // Рисуем иконку брони
+            context.drawItem(stack, x, y);
+            
+            // Рисуем процент износа под иконкой
+            String pctText = pct + "%";
+            int textWidth = getTextWidth(pctText);
+            context.drawTextWithShadow(
+                net.minecraft.client.MinecraftClient.getInstance().textRenderer,
+                pctText,
+                x + (iconSize - textWidth) / 2,
+                y + iconSize + 2,
+                pct > 50 ? 0xFF00FF00 : (pct > 25 ? 0xFFFFFF00 : 0xFFFF0000)
+            );
+            
+            slot++;
         }
     }
 }

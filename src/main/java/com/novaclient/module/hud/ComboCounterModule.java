@@ -54,7 +54,10 @@ public final class ComboCounterModule extends HudTextModule {
         int totalHeight = lineHeight;
         int maxWidth = getTextWidth(text);
         
+        // Цвет зависит от комбо
+        int color = combo > 10 ? 0xFF00FF00 : (combo > 5 ? 0xFFFFFF00 : 0xFFFFFFFF);
+        
         renderBackground(context, maxWidth, totalHeight);
-        drawLine(context, text, 0, 0xFFFFFFFF);
+        drawLine(context, text, 0, color);
     }
 }

@@ -38,7 +38,29 @@ public final class ScreenshotManagerModule extends Module {
     @Override
     public void renderHud(DrawContext context, float tickDelta) {
         if (!showHud.get() || ClientRefs.MC.textRenderer == null) return;
-        context.drawTextWithShadow(ClientRefs.MC.textRenderer, "Screenshots: " + screenshotsCount, 8, 228, 0xFFE5E5E5);
+        
+        // Рисуем фон для скриншот менеджера
+        String text = "Screenshots: " + screenshotsCount;
+        int width = getTextWidth(text);
+        int height = 10;
+        
+        int startX = (int)(x.get().intValue() * scale.get());
+        int startY = (int)(y.get().intValue() * scale.get());
+        
+        // Фон
+        context.fill(startX - 3, startY - 2, startX + width + 3, startY + height + 2, 0xAA000000);
+        
+        // Синяя линия сверху
+        context.drawHorizontalLine(startX - 2, startX + width + 2, startY - 2, 0xFF3498DB);
+        
+        // Текст
+        context.drawTextWithShadow(
+            ClientRefs.MC.textRenderer,
+            text,
+            startX,
+            startY,
+            0xFFE5E5E5
+        );
     }
 
     private int countScreenshots() {

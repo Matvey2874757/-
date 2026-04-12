@@ -38,40 +38,20 @@ public abstract class HudTextModule extends Module {
         int bgAlpha = backgroundColor.get().intValue();
         int borderAlpha = borderColor.get().intValue();
         
-        // Рисуем фон с закругленными углами (имитация)
-        context.fill(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (bgAlpha << 24) | 0x101010
-        );
+        int x = (int)(x.get().intValue() * scale.get());
+        int y = (int)(y.get().intValue() * scale.get());
         
-        // Рисуем границу
-        context.drawHorizontalLine(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (borderAlpha << 24) | 0x303030
-        );
-        context.drawHorizontalLine(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (borderAlpha << 24) | 0x303030
-        );
-        context.drawVerticalLine(
-            (int)(x.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (borderAlpha << 24) | 0x303030
-        );
-        context.drawVerticalLine(
-            (int)(x.get().intValue() * scale.get()) + width + 2,
-            (int)(y.get().intValue() * scale.get()) - 2,
-            (int)(y.get().intValue() * scale.get()) + height + 2,
-            (borderAlpha << 24) | 0x303030
-        );
+        // Рисуем основной фон (темный полупрозрачный)
+        context.fill(x - 3, y - 3, x + width + 3, y + height + 3, 0xAA000000);
+        
+        // Рисуем внутреннюю рамку (более светлая)
+        context.drawHorizontalLine(x - 3, x + width + 3, y - 3, (borderAlpha << 24) | 0x404040);
+        context.drawHorizontalLine(x - 3, x + width + 3, y + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawVerticalLine(x - 3, y - 3, y + height + 3, (borderAlpha << 24) | 0x404040);
+        context.drawVerticalLine(x + width + 3, y - 3, y + height + 3, (borderAlpha << 24) | 0x404040);
+        
+        // Рисуем верхний акцент (синяя линия сверху для современного вида)
+        context.drawHorizontalLine(x - 2, x + width + 2, y - 2, 0xFF3498DB);
     }
 
     protected int getTextWidth(String text) {
