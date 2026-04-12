@@ -3,47 +3,62 @@
 *.class
 *.o
 *.obj
-*.exe
+*.out
 *.dll
 *.so
 *.a
-*.out
-build/
-dist/
+*.exe
 
 # Dependencies
 lib/
+libs/
+dependency/
+dependencies/
+
+# Build directories
+build/
 target/
-.gradle/
-.mypy_cache/
-.pytest_cache/
-__pycache__/
-*.egg-info/
+out/
+dist/
+bin/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
 
 # Logs and temp files
 *.log
 *.tmp
+*.temp
 *.swp
+*.swo
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
+# Cache directories
+.cache/
+.gradle/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# System files
-.DS_Store
-Thumbs.db
-
-# Coverage
+# Coverage reports
 coverage/
 htmlcov/
 .coverage
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # Compressed files
 *.zip
@@ -64,8 +79,4 @@ htmlcov/
 *.Z
 *.lz
 *.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
 ```

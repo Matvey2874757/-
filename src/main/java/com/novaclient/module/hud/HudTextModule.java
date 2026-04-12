@@ -13,7 +13,7 @@ public abstract class HudTextModule extends Module {
     public final NumberSetting borderColor;
 
     protected HudTextModule(String name, String description, int x, int y) {
-        super(name, description, Category.HUD);
+        super(name, description, Category.HUD_LAYOUT);
         this.x = addSetting(new NumberSetting("X", x, 0, 2000));
         this.y = addSetting(new NumberSetting("Y", y, 0, 2000));
         this.scale = addSetting(new NumberSetting("Scale", 1.0, 0.5, 2.0));
