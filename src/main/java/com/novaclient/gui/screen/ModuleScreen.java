@@ -378,13 +378,21 @@ public final class ModuleScreen extends Screen {
         context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 60, 80, 120));
         context.drawCenteredTextWithShadow(textRenderer, "§f+", plusX + btnWidth/2, startY + 4, 0xFFFFFF);
         
-        // Check clicks
-        if (mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
+        // Store button positions for click detection
+        context.getMatrices().push();
+        
+        // Check clicks with hover effect
+        boolean minusHovered = mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight;
+        boolean plusHovered = mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight;
+        
+        if (minusHovered) {
             context.fill(minusX, startY, minusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
         }
-        if (mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
+        if (plusHovered) {
             context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
         }
+        
+        context.getMatrices().pop();
     }
 
     private String format(double value) {
@@ -437,17 +445,19 @@ public final class ModuleScreen extends Screen {
                         settingY += 24;
                     } else if (setting instanceof NumberSetting numberSetting) {
                         int btnWidth = 25;
+                        int btnHeight = 18;
                         int valueWidth = 80;
+                        int startY = settingY + 2;
                         int minusX = card.x + card.width - btnWidth * 2 - valueWidth - 5;
                         int plusX = minusX + btnWidth + valueWidth + 4;
                         
-                        if (mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= settingY + 2 && mouseY <= settingY + 20) {
+                        if (mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
                             numberSetting.set(Math.max(numberSetting.getMin(), numberSetting.get() - getStep(numberSetting)));
                             NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
                             rebuild();
                             return true;
                         }
-                        if (mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= settingY + 2 && mouseY <= settingY + 20) {
+                        if (mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
                             numberSetting.set(Math.min(numberSetting.getMax(), numberSetting.get() + getStep(numberSetting)));
                             NovaClient.CONFIG.save(NovaClient.MODULE_MANAGER);
                             rebuild();

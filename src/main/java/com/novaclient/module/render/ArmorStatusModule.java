@@ -1,6 +1,5 @@
-package com.novaclient.module.render;
+package com.novaclient.module.hud;
 
-import com.novaclient.module.hud.HudTextModule;
 import com.novaclient.util.ClientRefs;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ArmorItem;
