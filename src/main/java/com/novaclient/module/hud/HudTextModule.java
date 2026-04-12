@@ -11,6 +11,7 @@ public abstract class HudTextModule extends Module {
     public final NumberSetting scale;
     public final NumberSetting backgroundColor;
     public final NumberSetting borderColor;
+    protected int renderX, renderY;
 
     protected HudTextModule(String name, String description, int x, int y) {
         super(name, description, Category.HUD_LAYOUT);
@@ -21,15 +22,19 @@ public abstract class HudTextModule extends Module {
         this.borderColor = addSetting(new NumberSetting("Border Alpha", 220, 0, 255));
     }
 
+    protected void updateRenderPosition() {
+        this.renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
+        this.renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
+    }
+
     protected void drawLine(DrawContext context, String text, int line, int color) {
         if (net.minecraft.client.MinecraftClient.getInstance().textRenderer == null) return;
-        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
-        int renderY = (int)(y.get().doubleValue() + line * 10 * scale.get().doubleValue());
+        updateRenderPosition();
         context.drawTextWithShadow(
                 net.minecraft.client.MinecraftClient.getInstance().textRenderer,
                 text,
                 renderX,
-                renderY,
+                renderY + line * 10,
                 color
         );
     }
@@ -38,8 +43,7 @@ public abstract class HudTextModule extends Module {
         int bgAlpha = backgroundColor.get().intValue();
         int borderAlpha = borderColor.get().intValue();
         
-        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
-        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
+        updateRenderPosition();
         
         // Рисуем основной фон (темный полупрозрачный)
         context.fill(renderX - 3, renderY - 3, renderX + width + 3, renderY + height + 3, 0xAA000000);

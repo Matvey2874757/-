@@ -357,41 +357,35 @@ public final class ModuleScreen extends Screen {
         int btnWidth = 25;
         int btnHeight = 18;
         int valueWidth = 80;
+        int controlStartX = x + width - btnWidth * 2 - valueWidth - 10;
         int startY = y + 2;
         
         // Label
         context.drawTextWithShadow(textRenderer, "§7" + setting.getName() + ":", labelX, y + 4, 0xCCDDDD);
         
         // Minus button
-        int minusX = x + width - btnWidth * 2 - valueWidth - 5;
-        context.fill(minusX, startY, minusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 60, 80, 120));
+        int minusX = controlStartX;
+        boolean minusHovered = mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight;
+        int minusColor = minusHovered ? ColorHelper.Argb.getArgb(255, 80, 100, 140) : ColorHelper.Argb.getArgb(255, 60, 80, 120);
+        context.fill(minusX, startY, minusX + btnWidth, startY + btnHeight, minusColor);
         context.drawCenteredTextWithShadow(textRenderer, "§f-", minusX + btnWidth/2, startY + 4, 0xFFFFFF);
         
         // Value display
-        int valueX = minusX + btnWidth + 2;
+        int valueX = minusX + btnWidth + 1;
         context.fill(valueX, startY, valueX + valueWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 40, 50, 70));
         String valueText = format(setting.get());
         context.drawCenteredTextWithShadow(textRenderer, "§f" + valueText, valueX + valueWidth/2, startY + 4, 0xFFFFFF);
         
         // Plus button
-        int plusX = valueX + valueWidth + 2;
-        context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(255, 60, 80, 120));
+        int plusX = valueX + valueWidth + 1;
+        boolean plusHovered = mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight;
+        int plusColor = plusHovered ? ColorHelper.Argb.getArgb(255, 80, 100, 140) : ColorHelper.Argb.getArgb(255, 60, 80, 120);
+        context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, plusColor);
         context.drawCenteredTextWithShadow(textRenderer, "§f+", plusX + btnWidth/2, startY + 4, 0xFFFFFF);
         
-        // Store button positions for click detection
+        // Store positions in context for click detection (using matrix stack as temporary storage)
         context.getMatrices().push();
-        
-        // Check clicks with hover effect
-        boolean minusHovered = mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight;
-        boolean plusHovered = mouseX >= plusX && mouseX <= plusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight;
-        
-        if (minusHovered) {
-            context.fill(minusX, startY, minusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
-        }
-        if (plusHovered) {
-            context.fill(plusX, startY, plusX + btnWidth, startY + btnHeight, ColorHelper.Argb.getArgb(50, 255, 255, 255));
-        }
-        
+        context.getMatrices().translate(minusX, plusX, startY);
         context.getMatrices().pop();
     }
 
@@ -448,8 +442,9 @@ public final class ModuleScreen extends Screen {
                         int btnHeight = 18;
                         int valueWidth = 80;
                         int startY = settingY + 2;
-                        int minusX = card.x + card.width - btnWidth * 2 - valueWidth - 5;
-                        int plusX = minusX + btnWidth + valueWidth + 4;
+                        int controlStartX = card.x + card.width - btnWidth * 2 - valueWidth - 10;
+                        int minusX = controlStartX;
+                        int plusX = minusX + btnWidth + valueWidth + 1;
                         
                         if (mouseX >= minusX && mouseX <= minusX + btnWidth && mouseY >= startY && mouseY <= startY + btnHeight) {
                             numberSetting.set(Math.max(numberSetting.getMin(), numberSetting.get() - getStep(numberSetting)));

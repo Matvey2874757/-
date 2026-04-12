@@ -18,10 +18,8 @@ public final class ArmorStatusModule extends HudTextModule {
         int totalWidth = iconSize * 4 + gap * 3;
         int totalHeight = iconSize + 10; // + место для процентов
         
+        updateRenderPosition();
         renderBackground(context, totalWidth, totalHeight);
-        
-        int renderX = (int)(x.get().doubleValue() * scale.get().doubleValue());
-        int renderY = (int)(y.get().doubleValue() * scale.get().doubleValue());
         
         int slot = 0;
         for (var stack : ClientRefs.MC.player.getArmorItems()) {

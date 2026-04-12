@@ -1,13 +1,13 @@
 ```
-# Compiled and binary files
+# Compiled and build artifacts
 *.class
 *.o
 *.obj
-*.exe
+*.out
 *.dll
 *.so
 *.a
-*.out
+*.exe
 
 # Dependencies
 lib/
@@ -15,75 +15,58 @@ libs/
 dependency/
 dependencies/
 
-# Build artifacts
-target/
+# Build directories
 build/
-dist/
+target/
 out/
+bin/
+obj/
+
+# Package manager caches
+.gradle/
+.gradle/
+.m2/
+.ivy2/
+.cargo/
 
 # IDE files
 .idea/
 .vscode/
-*.iml
-*.iws
-*.ipr
+*.swp
+*.swo
+*.tmp
 
 # Logs
 *.log
 
-# Temporary files
-*.tmp
-*.temp
-*.cache
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Coverage
-coverage/
-htmlcov/
-*.coverage
-
-# Package manager
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
 # Python specific
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/
-.mypy_cache/
-.pytest_cache/
-.hypothesis/
+*.so
 
-# Gradle
-.gradle/
-build/
+# Java specific
+*.jar
+*.war
+*.ear
+hs_err_pid*
 
-# Maven
-target/
-
-# System files
+# Temporary files
+*.tmp
+*~
+\#*\#
 .DS_Store
 Thumbs.db
 ```
