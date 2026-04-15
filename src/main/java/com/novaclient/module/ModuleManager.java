@@ -37,12 +37,16 @@ public final class ModuleManager {
         modules.add(new WatermarkModule());
         modules.add(new ClockHudModule());
         modules.add(new DirectionCompassModule());
+        modules.add(new SpeedometerModule());
+        modules.add(new SessionStatsModule());
+        modules.add(new HudAccentModule());
 
         modules.add(new SprintModule());
         modules.add(new InventoryMoveModule());
         modules.add(new NoSlowdownModule());
         modules.add(new BetterSneakModule());
         modules.add(new AutoJumpModule());
+        modules.add(new AutoRespawnModule());
 
         modules.add(new AimAssistModule());
         modules.add(new HitDelayTimerModule());

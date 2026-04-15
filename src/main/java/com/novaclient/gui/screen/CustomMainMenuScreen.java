@@ -15,11 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CustomMainMenuScreen extends Screen {
-    private static final int BUTTON_WIDTH = 276;
-    private static final int BUTTON_HEIGHT = 34;
+    private static final int BUTTON_WIDTH = 292;
+    private static final int BUTTON_HEIGHT = 36;
     private static final int BUTTON_GAP = 12;
-    private static final int STAR_COUNT = 90;
-    private static final int COMET_COUNT = 6;
+    private static final int STAR_COUNT = 105;
+    private static final int COMET_COUNT = 7;
 
     private float fade;
     private final Screen parent;
@@ -34,7 +34,7 @@ public final class CustomMainMenuScreen extends Screen {
     protected void init() {
         buttons.clear();
         int x = width / 2 - BUTTON_WIDTH / 2;
-        int y = height / 2 - 84;
+        int y = height / 2 - 82;
 
         addButton("Одиночная игра", "Миры и сохранения", x, y, () -> client.setScreen(new SelectWorldScreen(this)));
         addButton("Сетевая игра", "Сервера и Realms", x, y + (BUTTON_HEIGHT + BUTTON_GAP), () -> client.setScreen(new MultiplayerScreen(this)));
@@ -52,6 +52,7 @@ public final class CustomMainMenuScreen extends Screen {
         fade = Math.min(1f, fade + delta * 0.04f);
 
         renderSpaceBackground(context, mouseX, mouseY);
+        renderMenuGlassCard(context);
         renderHeader(context);
 
         for (int i = 0; i < buttons.size(); i++) {
@@ -60,24 +61,56 @@ public final class CustomMainMenuScreen extends Screen {
             button.render(context, textRenderer, mouseX, mouseY, appear);
         }
 
-        int footerColor = ColorHelper.Argb.getArgb((int) (190 * fade), 190, 210, 245);
+        renderInfoPanels(context);
+
+        int footerColor = ColorHelper.Argb.getArgb((int) (195 * fade), 190, 210, 245);
         context.drawCenteredTextWithShadow(textRenderer, "Fabric 1.21.1  •  Java 21  •  NovaClient QoL", width / 2, height - 20, footerColor);
+    }
+
+    private void renderMenuGlassCard(DrawContext context) {
+        int cardW = BUTTON_WIDTH + 42;
+        int cardH = BUTTON_HEIGHT * buttons.size() + BUTTON_GAP * (buttons.size() - 1) + 36;
+        int x = width / 2 - cardW / 2;
+        int y = height / 2 - 98;
+
+        context.fill(x, y, x + cardW, y + cardH, 0x78121E35);
+        context.fill(x, y, x + cardW, y + 2, 0xA090D7FF);
+        context.fill(x, y + cardH - 2, x + cardW, y + cardH, 0x903F6AA3);
+    }
+
+    private void renderInfoPanels(DrawContext context) {
+        int leftX = 22;
+        int leftY = height - 84;
+        context.fill(leftX, leftY, leftX + 158, leftY + 52, 0x6E12233F);
+        context.fill(leftX, leftY, leftX + 158, leftY + 1, 0xFF84C5FF);
+        context.drawTextWithShadow(textRenderer, "Profile: Legit QoL", leftX + 8, leftY + 10, 0xFFEAF4FF);
+        context.drawText(textRenderer, "Modules: " + com.novaclient.NovaClient.MODULE_MANAGER.getModules().size(), leftX + 8, leftY + 24, 0xBDD5ECFF, false);
+        context.drawText(textRenderer, "Press RSHIFT for menu", leftX + 8, leftY + 35, 0xB0C6E0FF, false);
+
+        int rightW = 166;
+        int rightX = width - rightW - 22;
+        int rightY = height - 84;
+        context.fill(rightX, rightY, rightX + rightW, rightY + 52, 0x6E12233F);
+        context.fill(rightX, rightY, rightX + rightW, rightY + 1, 0xFF84C5FF);
+        context.drawTextWithShadow(textRenderer, "UI Theme: Cosmic", rightX + 8, rightY + 10, 0xFFEAF4FF);
+        context.drawText(textRenderer, "Animations: Smooth", rightX + 8, rightY + 24, 0xBDD5ECFF, false);
+        context.drawText(textRenderer, "Visual-only helpers", rightX + 8, rightY + 35, 0xB0C6E0FF, false);
     }
 
     private void renderSpaceBackground(DrawContext context, int mouseX, int mouseY) {
         float nx = (mouseX - width / 2f) / width;
         float ny = (mouseY - height / 2f) / height;
 
-        context.fillGradient(0, 0, width, height, 0xFF050914, 0xFF111D36);
-        context.fillGradient(0, height / 2, width, height, 0x10000000, 0x66020410);
+        context.fillGradient(0, 0, width, height, 0xFF03070F, 0xFF121D33);
+        context.fillGradient(0, height / 2, width, height, 0x12000000, 0x6B020611);
 
         for (int i = 0; i < STAR_COUNT; i++) {
             int sx = hash(i * 71 + 13, width);
             int sy = hash(i * 97 + 19, height);
             int size = 1 + ((i * 23) % 2);
-            int driftX = (int) (nx * (1 + i % 3) * 5f);
-            int driftY = (int) (ny * (1 + i % 2) * 5f);
-            int twinkle = 140 + (int) ((Math.sin((System.currentTimeMillis() * 0.004) + i) + 1) * 55);
+            int driftX = (int) (nx * (1 + i % 3) * 6f);
+            int driftY = (int) (ny * (1 + i % 2) * 6f);
+            int twinkle = 125 + (int) ((Math.sin((System.currentTimeMillis() * 0.004) + i) + 1) * 60);
             int starColor = ColorHelper.Argb.getArgb(Math.min(255, twinkle), 220, 235, 255);
             context.fill(sx + driftX, sy + driftY, sx + driftX + size, sy + driftY + size, starColor);
         }
@@ -86,23 +119,23 @@ public final class CustomMainMenuScreen extends Screen {
             drawComet(context, i, nx, ny);
         }
 
-        context.fillGradient(0, height - 68, width, height, 0x00000000, 0x90010616);
+        context.fillGradient(0, height - 68, width, height, 0x00000000, 0x95010514);
     }
 
     private void drawComet(DrawContext context, int idx, float nx, float ny) {
         double time = System.currentTimeMillis() / 1000.0;
-        double speed = 0.11 + idx * 0.015;
+        double speed = 0.1 + idx * 0.013;
         double offset = (time * speed + idx * 0.22) % 1.0;
 
-        int startX = (int) ((1.2 - offset) * width) - (idx * 38);
-        int startY = (int) ((0.18 + offset * 0.55) * height) + idx * 12;
+        int startX = (int) ((1.2 - offset) * width) - (idx * 40);
+        int startY = (int) ((0.14 + offset * 0.62) * height) + idx * 10;
 
         startX += (int) (nx * 25);
         startY += (int) (ny * 25);
 
-        int tail = 70 + idx * 10;
+        int tail = 76 + idx * 9;
         for (int t = 0; t < tail; t += 3) {
-            int alpha = Math.max(0, 175 - (t * 2));
+            int alpha = Math.max(0, 170 - (t * 2));
             int x = startX + t;
             int y = startY - t / 2;
             context.fill(x, y, x + 3, y + 2, ColorHelper.Argb.getArgb(alpha, 120, 200, 255));
@@ -124,12 +157,12 @@ public final class CustomMainMenuScreen extends Screen {
 
         MatrixStack matrices = context.getMatrices();
         matrices.push();
-        matrices.translate(width / 2f, 74, 0);
+        matrices.translate(width / 2f, 70, 0);
         matrices.scale(pulse, pulse, 1f);
         context.drawCenteredTextWithShadow(textRenderer, "NOVA CLIENT", 0, 0, ColorHelper.Argb.getArgb(alpha, 236, 244, 255));
         matrices.pop();
 
-        context.drawCenteredTextWithShadow(textRenderer, "Космический интерфейс • легитный gameplay", width / 2, 92,
+        context.drawCenteredTextWithShadow(textRenderer, "Космический интерфейс • настройки модулей в 1 клик", width / 2, 88,
                 ColorHelper.Argb.getArgb((int) (220 * fade), 170, 205, 255));
     }
 
@@ -196,8 +229,8 @@ public final class CustomMainMenuScreen extends Screen {
             int drawY = y + offsetY;
             boolean hovered = isInside(mouseX, mouseY);
 
-            int base = hovered ? ColorHelper.Argb.getArgb((int) (225 * appear), 28, 44, 78)
-                    : ColorHelper.Argb.getArgb((int) (175 * appear), 18, 30, 56);
+            int base = hovered ? ColorHelper.Argb.getArgb((int) (228 * appear), 30, 48, 84)
+                    : ColorHelper.Argb.getArgb((int) (182 * appear), 18, 32, 58);
             int borderTop = hovered ? ColorHelper.Argb.getArgb((int) (255 * appear), 127, 200, 255)
                     : ColorHelper.Argb.getArgb((int) (185 * appear), 87, 127, 205);
             int borderBottom = hovered ? ColorHelper.Argb.getArgb((int) (175 * appear), 98, 172, 255)
@@ -213,7 +246,7 @@ public final class CustomMainMenuScreen extends Screen {
             int subColor = ColorHelper.Argb.getArgb((int) (225 * appear), 153, 182, 224);
 
             int titleY = drawY + 8;
-            int subY = drawY + 20;
+            int subY = drawY + 21;
             context.drawCenteredTextWithShadow(textRenderer, title, x + width / 2, titleY, titleColor);
             context.drawCenteredTextWithShadow(textRenderer, subtitle, x + width / 2, subY, subColor);
         }
